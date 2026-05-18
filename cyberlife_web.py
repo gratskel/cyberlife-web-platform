@@ -17,10 +17,10 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     raise RuntimeError("АВАРИЯ: Ключ GROQ_API_KEY не обнаружен")
     
-# 2. Инициализация FastAPI сервера Киберлайф
+# Инициализация FastAPI сервера Киберлайф
 app = FastAPI(title="CyberLife Systems // Connor RK800 API")
 
-# Разрешаем браузеру Самсунга беспрепятственно общаться с сервером
+# Разрешение браузеру беспрепятственно общаться с сервером
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -32,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Твой калёный семафор на 5 одновременных потоков для защиты от блокировок Groq
+# Семафор на 5 одновременных потоков для защиты от блокировок Groq
 rate_limiter = asyncio.Semaphore(5)
 groq_client = AsyncGroq(api_key=GROQ_API_KEY)
 
@@ -40,7 +40,7 @@ class ChatRequest(BaseModel):
     message: str
     history: list
 
-# 3. Текстовый асинхронный шлюз чата (Ядро GPT120-OSS)
+# Текстовый асинхронный шлюз чата
 @app.get("/")
 async def get_site_interface():
     return FileResponse("cyberlife_interface.html")
@@ -60,13 +60,13 @@ async def connor_web_endpoint(payload: ChatRequest):
             completion = await groq_client.chat.completions.create(
                 model="openai/gpt-oss-120b",
                 messages=messages,
-                temperature=0.3  # Жёсткий детерминированный тон андроида без галлюцинаций
+                temperature=0.3
             )
             return {"status": "success", "message": completion.choices[0].message.content}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-# 4. МУЛЬТИМОДАЛЬНЫЙ ШЛЮЗ: Твоя вчерашняя логика PDF + OCR (Ядро GPT120-OSS)
+# Мультимодальный шлюз
 @app.post("/api/connor/upload")
 async def connor_upload_endpoint(file: UploadFile = File(...)):
     async with rate_limiter:
@@ -75,16 +75,16 @@ async def connor_upload_endpoint(file: UploadFile = File(...)):
             file_extension = file.filename.split(".")[-1].lower()
             extracted_text = ""
             
-            # Твой пуленепробиваемый конвейер обработки документов
+            # Конвейер обработки документов
             if file_extension == "pdf":
                 with fitz.open(stream=file_bytes, filetype="pdf") as doc:
-                    # Извлекаем текст первых 25 страниц, как ты ювелирно настроила
+                    # Извлекаем текст первых 25 страниц
                     for page in doc[:25]:
                         extracted_text += page.get_text()
                         
             elif file_extension in ["png", "jpg", "jpeg"]:
                 img = Image.open(BytesIO(file_bytes))
-                # Твой калёный пиксельный скан накладных через Tesseract
+                # Пиксельный скан накладных через Tesseract
                 extracted_text = pytesseract.image_to_string(img, lang="rus+eng")
             else:
                 raise ValueError("Допустимы только PDF и изображения.")
@@ -92,7 +92,7 @@ async def connor_upload_endpoint(file: UploadFile = File(...)):
             if not extracted_text.strip():
                 raise ValueError("Не удалось извлечь печатный текст из документа.")
 
-            # Отправка извлечённого массива на суммаризацию в Грок
+            # Отправка извлечённого массива на суммаризацию в Groq
             messages = [
                 {"role": "system", "content": "You are Connor, an android from CyberLife. Summarize the following extracted document text analytically, strictly, and concisely using your maximum reasoning capabilities."},
                 {"role": "user", "content": f"Document content:\n{extracted_text[:12000]}"}  # Расширили лимит благодаря gpt120-oss!
