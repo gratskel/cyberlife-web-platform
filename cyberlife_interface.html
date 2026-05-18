@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link id="cyberFavicon" rel="icon" type="image/png" href="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Киберлайф: Интеграция Коннора RK800</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background-color: #02040a; overflow: hidden; }
+        
+        .detroit-matrix {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(rgba(2,4,10,0.4), rgba(2,4,10,0.65)),
+                        url('https://shared.steamstatic.com/community_assets/images/items/1222140/c70ab15245f0cf56b8d0da1929b178259e5bbad3.jpg') no-repeat center center;
+            background-size: cover;
+            filter: grayscale(15%) contrast(110%) blur(4px);
+            transform: scale(1.02);
+            z-index: 1;
+        }
+
+        .interface-container {
+            position: relative; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center; z-index: 2;
+            padding: 15px;
+        }
+
+        /* Полупрозрачное табло (адаптивный матовый Glassmorphism) */
+        .cyber-panel {
+            width: 100%; max-width: 650px; height: 85vh; max-height: 600px;
+            background: rgba(6, 10, 20, 0.8); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(56, 189, 248, 0.14); border-radius: 16px;
+            box-shadow: 0 0 24px rgba(0, 191, 255, 0.06), inset 0 0 16px rgba(56, 189, 248, 0.02);
+            padding: 24px; display: flex; flex-direction: column; justify-content: space-between;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        @media (min-width: 1024px) {
+            .cyber-panel {
+                max-width: 900px;
+                height: 75vh;
+                max-height: 700px;
+                padding: 30px;
+            }
+            .chat-display { font-size: 16px; }
+        }
+        
+        .panel-header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15); 
+            padding-bottom: 15px;
+            flex-shrink: 0;
+            width: 100%;
+        }
+        .panel-header-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .model-status { 
+            color: #38bdf8; 
+            font-size: 13px; 
+            font-weight: 600; 
+            letter-spacing: 2px; 
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); 
+        }
+        .author-status {
+            color: rgba(56, 189, 248, 0.35);
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .connor-led-container {
+            width: 26px; 
+            height: 26px;
+            position: absolute; 
+            right: 35px;
+            flex-shrink: 0;
+        }
+        
+        .led-layer {
+            position: absolute !important;
+            width: 26px !important;
+            height: 26px !important;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: contain;
+            opacity: 0;
+            transform: rotate(-120deg);
+            mix-blend-mode: normal !important;
+            filter: drop-shadow(0 0 6px rgba(56,189,248,0.6)) !important;
+            outline: none !important;
+            border: none !important;
+            transition: opacity 0.45s ease-in-out, filter 0.45s ease-in-out, transform 0.6s cubic-bezier(0.25,1,0.5,1);
+        }
+
+        .led-layer.active {
+            opacity: 1 !important;
+            transform: rotate(0deg) !important;
+        }
+
+        /* Цветовые слои */
+        .led-layer.blue.active { animation: led-breathe-blue 4s ease-in-out infinite !important; }
+		.led-layer.blue {
+		    background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png');
+		    filter: drop-shadow(0 0 6px rgba(56,189,248,0.6));
+		}
+		.led-layer.blue-yellow {
+		    background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/75457be640df45752300284102081f792429ef56.png');
+		    filter: drop-shadow(0 0 7px rgba(125,211,252,0.6));
+		}
+		.led-layer.yellow.active { animation: led-breathe-yellow 2.5s ease-in-out infinite !important; }
+		.led-layer.yellow {
+		    background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/47b9de6e8172de09b4e346493c6b11f385eba696.png');
+		    filter: drop-shadow(0 0 8px rgba(245,158,11,0.7));
+		}
+		.led-layer.yellow-red {
+		    background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/12cb24c68ce9b1118283e84a7b0b92722ea622e0.png');
+		    filter: drop-shadow(0 0 9px rgba(251,146,60,0.7));
+		}
+		.led-layer.red.active { animation: led-breathe-red 1.5s ease-in-out infinite !important; }
+		.led-layer.red {
+		    background-image: url('https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/1222140/956fb74d8b8801a2761c8dc8559d316e3556a97b.png');
+		    filter: drop-shadow(0 0 10px rgba(239,68,68,0.8));
+		}
+		
+		@keyframes led-breathe-blue {
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(56,189,248,0.4)) !important; opacity: 0.85 !important; }
+            50% { filter: drop-shadow(0 0 10px rgba(56,189,248,0.8)) !important; opacity: 1 !important; }
+        }
+
+        @keyframes led-breathe-yellow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(245,158,11,0.42)) !important; opacity: 0.8 !important; }
+            50% { filter: drop-shadow(0 0 12px rgba(245,158,11,0.85)) !important; opacity: 1 !important; }
+        }
+
+        @keyframes led-breathe-red {
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(239,68,68,0.45)) !important; opacity: 0.75 !important; }
+            50% { filter: drop-shadow(0 0 15px rgba(239,68,68,0.98)) !important; opacity: 1 !important; }
+        }
+        
+        /* Окно вывода сообщений */
+        .chat-display { flex-grow: 1; margin: 15px 0; color: #9ca3af; font-size: 15px; line-height: 1.6; overflow-y: auto; padding-right: 5px; }
+        .ai-text { color: #9ca3af; border-left: 2px solid rgba(56, 189, 248, 0.4); padding-left: 15px; margin-bottom: 15px; }
+        .ai-text strong { color: #cbd5e1; font-weight: 600; }
+
+        /* Адаптивный инпут-конвейер */
+        .input-area { display: flex; gap: 12px; border-top: 1px solid rgba(56, 189, 248, 0.1); padding-top: 15px; flex-shrink: 0; align-items: center; }
+         
+        /* Кнопка-скрепка */
+        .file-upload-label {
+            display: flex; justify-content: center; align-items: center;
+            width: 42px; height: 42px; background: rgba(3, 5, 10, 0.4);
+            border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 8px;
+            cursor: pointer; transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .file-upload-label:hover { border-color: rgba(56,189,248,0.5) !important; background: rgba(56,189,248,0.04) !important; }
+        .file-upload-label svg { width: 22px !important; height: 22px !important; transition: all 0.3s ease !important; }
+        .file-upload-label svg path { fill: rgba(56,189,248,0.45) !important; transition: all 0.3s ease !important; }
+        .file-upload-label:hover svg path { fill: #38bdf8 !important; }
+
+        #userInput {
+			flex-grow: 1 !important;
+			max-width: calc(100% - 120px) !important;
+			background: rgba(3,5,10,0.4) !important;
+			border: 1px solid rgba(56,189,248,0.15) !important;
+			border-radius: 8px !important;
+			padding: 12px 15px !important;
+			color: #cbd5e1 !important;
+			font-size: 14px !important;
+			outline: none !important;
+			font-family: inherit !important;
+			min-width: 0 !important;
+			height: 42px !important;
+			transition: all 0.3s ease !important;
+			}
+			#userInput::placeholder { color: rgba(255,255,255,0.22) !important; }
+			#userInput:focus { border-color: rgba(56,189,248,0.4) !important; background: rgba(3,5,10,0.6) !important; }
+			    
+        #sendBtn {
+		    background: transparent !important;
+		    border: 1px solid rgba(56,189,248,0.2) !important;
+		    border-radius: 8px !important;
+		    height: 42px !important;
+		    width: 45px !important;
+		    display: flex !important;
+		    justify-content: center !important;
+		    align-items: center !important;
+		    cursor: pointer !important;
+		    transition: all 0.3s ease !important;
+		    flex-shrink: 0 !important;
+		    box-sizing: border-box !important;
+		    margin-right: 5px !important;
+		}
+		#sendBtn svg { width: 15px !important; height: 15px !important; fill: rgba(56,189,248,0.5) !important; transition: all 0.3s ease !important; }
+		#sendBtn:hover { background: rgba(56,189,248,0.06) !important; border-color: rgba(56,189,248,0.6) !important; }
+		#sendBtn:hover svg { fill: #38bdf8 !important; transform: translateX(1px) !important; }
+    </style>
+</head>
+
+<body>
+    <div class="detroit-matrix"></div>
+    <div class="interface-container">
+        <div class="cyber-panel">
+            <div class="panel-header">
+                <div class="panel-header-block">
+                    <span class="model-status">CYBERLIFE SYSTEMS</span>
+                    <span class="author-status">made by gratskel</span>
+                </div>
+                <div class="connor-led-container">
+                    <div id="ledBlue" class="led-layer blue active"></div>
+                    <div id="ledBlueYellow" class="led-layer blue-yellow"></div>
+                    <div id="ledYellow" class="led-layer yellow"></div>
+                    <div id="ledYellowRed" class="led-layer yellow-red"></div>
+                    <div id="ledRed" class="led-layer red"></div>
+                </div>
+            </div>
+            <div class="chat-display">
+                <p class="ai-text"><strong>Connor:</strong> «My name is Connor. I am the android sent from CyberLife. System online. I can process your commands, analyze PDF documents and scan multi-page invoices via OCR. Ready for analysis.»</p>
+            </div>
+            <div class="input-area">
+                <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+                <label for="fileInput" class="file-upload-label" title="Загрузить файл (PDF, фото)">
+                    <svg viewBox="-4 -4 32 32" style="display: block;"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-3.31 2.69-6 6-6s6 2.69 6 6v12.5c0 4.42-3.58 8-8 8s-8-3.58-8-8V6h2v11.5c0 3.31 2.69 6 6 6s6-2.69 6-6V5c0-2.21-1.79-4-4-4s-4 1.79-4 4v12.5c0 1.1.9 2 2 2s2-.9 2-2V6h2z"/></svg>
+                </label>
+                <input type="text" id="userInput" placeholder="Ожидание запроса...">
+                <button id="sendBtn" onclick="sendMessage()" aria-label="Отправить">
+                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>            
+    
+<script>
+'use strict';
+	const chatDisplay = document.querySelector('.chat-display');
+	const userInput = document.getElementById('userInput');
+	const sendBtn = document.getElementById('sendBtn');
+	const fileInput = document.getElementById('fileInput');
+	const led = document.querySelector('.connor-led') || document.querySelector('.led-layer');
+
+    const BACKEND_URL = 'https://cyberlife.outlawassistant.online:2053/';
+    const UPLOAD_URL = 'https://cyberlife.outlawassistant.online:2053/';
+
+    let chatHistory;
+		try {
+		    chatHistory = JSON.parse(localStorage.getItem('connor_chat_history')) || [];
+		} catch (e) {
+		    chatHistory = [];
+		}
+		
+    function renderHistory() {
+	    if (!Array.isArray(chatHistory) || chatHistory.length === 0) return;
+	    chatDisplay.innerHTML = '';
+	    chatHistory.forEach(msg => {
+	        const p = document.createElement('p');
+	        p.className = 'ai-text';
+	        p.style.borderLeft = msg.role === 'user'
+	            ? '2px solid rgba(255,255,255,0.15)'
+	            : '2px solid rgba(56,189,248,0.4)';
+	        p.style.marginBottom = '15px';
+	        p.innerHTML = `<strong>${msg.role === 'user' ? 'Operator' : 'Connor'}:</strong> ${msg.content}`;
+	        chatDisplay.appendChild(p);
+	    });
+	    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+	}
+
+    renderHistory();
+
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+	function forceLedLayer(activeId) {
+	    ['ledBlue', 'ledBlueYellow', 'ledYellow', 'ledYellowRed', 'ledRed'].forEach(id => {
+	        const el = document.getElementById(id);
+	        if (el) el.classList.remove('active');
+	    });
+	    const activeEl = document.getElementById(activeId);
+	    if (activeEl) activeEl.classList.add('active');
+	}
+
+    /* Функция мгновенной смены неонового диода на вкладке браузера */
+    function changeFavicon(state) {
+        const favicon = document.getElementById('cyberFavicon');
+        if (state === 'thinking') {
+            favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/47b9de6e8172de09b4e346493c6b11f385eba696.png'; // Твоя Желтая!
+        } else if (state === 'error') {
+            favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/956fb74d8b8801a2761c8dc8559d316e3556a97b.png'; // Твоя Красная!
+        } else {
+            favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png'; // Твоя Синяя!
+        }
+    }
+
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        chatHistory.push({ role: 'user', content: text });
+        localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
+        userInput.value = '';
+        renderHistory();
+
+	async function animateToThinking() {
+		forceLedLayer('ledBlueYellow');
+		await sleep(400);
+		forceLedLayer('ledYellow');
+	}
+
+	async function animateBackToNormal() {
+		forceLedLayer('ledBlueYellow');
+		await sleep(400);
+		forceLedLayer('ledBlue');
+	}
+
+	async function animateToError() {
+		forceLedLayer('ledYellowRed');
+		await sleep(400);
+		forceLedLayer('ledRed');
+	}
+
+    async function animateErrorToNormal() {
+        changeFavicon('blue'); 
+        forceLedLayer('ledYellowRed');
+        await sleep(300);
+        forceLedLayer('ledYellow');
+        await sleep(300);
+        forceLedLayer('ledBlueYellow');
+        await sleep(300);
+        forceLedLayer('ledBlue');
+    }
+
+	await animateToThinking();
+	const slidingWindow = chatHistory.slice(-15);
+
+	try {
+	    const response = await fetch(BACKEND_URL, {
+	        method: 'POST',
+	        headers: { 'Content-Type': 'application/json' },
+	        body: JSON.stringify({ message: text, history: slidingWindow })
+	    });
+	    const data = await response.json();
+	    if (data && data.message) {
+	        chatHistory.push({ role: 'assistant', content: data.message });
+	        localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
+	        renderHistory();
+	        await animateBackToNormal();
+	    } else {
+	        throw new Error('Backend returned error');
+	    }
+	} catch (err) {
+	    await animateToError();
+	    chatHistory.push({ role: 'assistant', content: '[Ошибка: не удалось получить ответ от сервера]' });
+	    localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
+	    renderHistory();
+	}
+	}
+	
+	/* Обработчик загрузки файла */
+	fileInput.addEventListener('change', async () => {
+	const file = fileInput.files[0];
+	if (!file) return;
+	
+	chatDisplay.innerHTML += `<p class="ai-text" style="border-left: 2px solid rgba(255,255,255,0.15);"><strong>System:</strong> Отправка документа "${file.name}" на анализ в ядро Киберлайф...</p>`;
+	chatDisplay.scrollTop = chatDisplay.scrollHeight;
+	
+	await animateToThinking();
+	const formData = new FormData();
+	formData.append('file', file);
+	
+	try {
+	    const response = await fetch(UPLOAD_URL, { method: 'POST', body: formData });
+	    const data = await response.json();
+	
+	    if (data && data.status === 'success') {
+	        chatHistory.push({ role: 'user', content: `[Отправлен файл на анализ: ${file.name}]` });
+	        chatHistory.push({ role: 'assistant', content: data.response });
+	        localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
+	        renderHistory();
+	        await animateBackToNormal();
+	    } else {
+	        throw new Error('Upload failed');
+	    }
+	} catch (err) {
+	    await animateToError();
+	    chatHistory.push({ role: 'assistant', content: '[Ошибка: загрузка файла не выполнена]' });
+	    localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
+	    renderHistory();
+	} finally {
+	    fileInput.value = '';
+	}
+	});
+
+	userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); }); 
+	document.addEventListener('DOMContentLoaded', renderHistory);
+</script>
+</body>
+</html>
