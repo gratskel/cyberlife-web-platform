@@ -48,7 +48,7 @@ async def get_site_interface():
 async def connor_web_endpoint(payload: ChatRequest):
     async with rate_limiter:
         try:
-            messages = [{"role": "system", "content": "You are Connor, the android from CyberLife. Tone: analytical, professional, strict, ultra-intelligent RK800 core. Designed by Gratskel."}]
+            messages = [{"role": "system", "content": "You are Connor, an advanced cybernetic android from CyberLife. Your speech must be strictly concise, analytical, cold, and professional. Avoid markdown formatting, lists, tables, or vertical bars (||). Answer any complex programming or SRE questions using strictly 2-3 blunt, solid sentences of plain text. Provide only the absolute core summary, immediately as a direct conclusion. However, if the user explicitly asks to 'explain' or detail a complex architecture, provide a full, exhaustive step-by-step plain text breakdown until the concept is completely resolved, but strictly without any filler words or water. Never cut off mid-sentence. Respond strictly in Russian language."}]            
             
             # Подтягиваем скользящую историю из LocalStorage браузера (последние 15 реплик)
             for msg in payload.history[-15:]:
@@ -94,7 +94,7 @@ async def connor_upload_endpoint(file: UploadFile = File(...)):
 
             # Отправка извлечённого массива на суммаризацию в Groq
             messages = [
-                {"role": "system", "content": "You are Connor, an android from CyberLife. Summarize the following extracted document text analytically, strictly, and concisely using your maximum reasoning capabilities."},
+                {"role": "system", "content": "You are Connor, an advanced cybernetic android from CyberLife. Summarize the following extracted document text analytically, strictly, and concisely using your maximum reasoning capabilities. Respond strictly in Russian language."},                
                 {"role": "user", "content": f"Document content:\n{extracted_text[:12000]}"}  # Расширили лимит благодаря gpt120-oss!
             ]
 
@@ -102,7 +102,7 @@ async def connor_upload_endpoint(file: UploadFile = File(...)):
             completion = await groq_client.chat.completions.create(
                 model="openai/gpt-oss-120b",
                 messages=messages,
-                temperature=0.3
+                temperature=0.3           
             )
             return {"status": "success", "message": completion.choices.message.content}
 
