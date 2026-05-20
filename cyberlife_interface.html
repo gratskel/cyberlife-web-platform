@@ -451,7 +451,7 @@
                 box-shadow: 0 0 15px rgba(56, 189, 248, 0.4) !important; 
             }
             100% { 
-                transform: scale(0.5) scaleY(0) translateY(-30px); /* Полное плоское схлопывание слоя в нуль! */
+                transform: scale(0.5) scaleY(0) translateY(-30px);
                 opacity: 0 !important; 
                 filter: blur(4px); 
             }
@@ -645,50 +645,55 @@
   if (fileInput) fileInput.value = '';
 }
 
-  function addMessagesToDisplay() {
-    if (!chatDisplay) return;
-    chatDisplay.innerHTML = "";
+    function addMessagesToDisplay() {
+	    if (!chatDisplay) return;
+	    chatDisplay.innerHTML = "";
+	    
+	    chatHistory.forEach((msg, index) => {
+	        const p = document.createElement('p');
+	        p.className = 'ai-text';
+	
+	        if (msg.role === 'user') {
+	            p.classList.add('operator-bubble');
+	            
+	            // ДОБАВЛЯЕМ ПОДСВЕТКУ В РЕЖИМЕ РЕДАКТИРОВАНИЯ
+	            if (isRollbackModeActive) {
+	                p.classList.add('selectable-user-msg');
+	                p.style.cursor = 'pointer';
+	                p.addEventListener('click', () => executeHistoryRollback(index));
+	            }
+	        } else {
+	            p.classList.add('connor-bubble');
+	            if (index > 0 && chatHistory[index - 1].fileFormats && chatHistory[index - 1].fileFormats.length > 0) {
+	                p.classList.add('file-reply-gap');
+	            }
+	        }
+	
+	        if (msg.content) {
+	            const textNode = document.createTextNode(msg.content);
+	            p.appendChild(textNode);
+	        }
+	
+	        if (msg.fileFormats && msg.fileFormats.length > 0) {
+	            if (msg.content) p.appendChild(document.createElement('br'));
+	            
+	            const wrapper = document.createElement('div');
+	            wrapper.className = 'inner-bubble-file-wrapper';
+	            
+	            msg.fileFormats.forEach(fmt => {
+	                const badge = document.createElement('div');
+	                badge.classList.add('inner-bubble-file-badge'); 
+	                badge.textContent = fmt.trim().toUpperCase();
+	                wrapper.appendChild(badge);
+	            });
+	            p.appendChild(wrapper);
+	        }
+	            
+	        chatDisplay.appendChild(p);
+	    });
+	    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+	}
     
-    chatHistory.forEach((msg, index) => {
-        const p = document.createElement('p');
-        p.className = 'ai-text';
-
-        if (msg.role === 'user') {
-            p.classList.add('operator-bubble'); 
-        } else {
-            p.classList.add('connor-bubble');
-            if (index > 0 && chatHistory[index - 1].fileFormats && chatHistory[index - 1].fileFormats.length > 0) {
-                p.classList.add('file-reply-gap');
-            }
-        }
-
-        if (msg.content) {
-            const textNode = document.createTextNode(msg.content);
-            p.appendChild(textNode);
-        }
-
-        if (msg.fileFormats && msg.fileFormats.length > 0) {
-            if (msg.content) p.appendChild(document.createElement('br'));
-            
-            const wrapper = document.createElement('div');
-            wrapper.className = 'inner-bubble-file-wrapper';
-            
-            msg.fileFormats.forEach(fmt => {
-                const badge = document.createElement('div');
-                
-                badge.classList.add('inner-bubble-file-badge'); 
-                badge.textContent = fmt.trim().toUpperCase();
-                
-                wrapper.appendChild(badge);
-            });
-            p.appendChild(wrapper);
-        }
-            
-            chatDisplay.appendChild(p);
-        });
-        chatDisplay.scrollTop = chatDisplay.scrollHeight;
-    }
-
   function renderHistory() {
     if (!chatDisplay) return;
     
@@ -712,14 +717,13 @@
         addMessagesToDisplay();
     }
   }
-
-  async function executeHistoryRollback(targetIndex) {
-    isRollbackModeActive = false;
-    const targetMessageText = chatHistory[targetIndex] && chatHistory[targetIndex].content;
-    const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text') : [];
-
-    let maxAnimationDelay = 0;
+  
+    async function executeHistoryRollback(targetIndex) {
+        isRollbackModeActive = false;
+        const targetMessageText = chatHistory[targetIndex] && chatHistory[targetIndex].content;
+        const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text:not(.welcome-message)') : [];
         
+        let maxAnimationDelay = 0;
         for (let i = chatHistory.length - 1; i >= targetIndex; i--) {
             if (bubbles[i]) {
                 const delayAmount = (chatHistory.length - 1 - i) * 80;
@@ -730,12 +734,13 @@
         
         const totalAnimationTime = maxAnimationDelay + 400;
         
+        chatHistory = chatHistory.slice(0, targetIndex); 
+        
         try {
             if (userInput) {
-                userInput.value = targetMessageText || '';
+                userInput.value = targetMessageText || "";
                 userInput.focus();
             }
-
             await animateToThinking();
             
             const response = await fetch(BACKEND_URL, {
@@ -747,8 +752,7 @@
             
             await sleep(totalAnimationTime);
             
-            chatHistory = chatHistory.slice(0, targetIndex);
-            renderHistory();
+            renderHistory(); 
             await animateBackToNormal();
         } catch (err) {
             await animateToError();
@@ -870,7 +874,7 @@
         clientSideFileBuffer = "";
         if (userInput) userInput.placeholder = "Ожидание запроса...";
     }
-}
+}    
 
     function onFileChange() {
         togglePlusMenu();
