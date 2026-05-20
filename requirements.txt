@@ -1,9 +1,5 @@
 fastapi==0.136.1
 uvicorn==0.47.0
-groq==1.1.2
-pydantic==2.12.5
+groq==1.2.0
+pydantic==2.13.4
 python-dotenv==1.2.2
-python-multipart==0.0.28
-PyMuPDF==1.27.2.2
-pytesseract==0.3.13
-Pillow==12.2.0
