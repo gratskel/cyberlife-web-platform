@@ -2,17 +2,21 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <link id="cyberFavicon" rel="icon" type="image/png" href="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Киберлайф: Интеграция Коннора RK800</title>
+    <title>CyberLife Systems // Connor RK800 Interface</title>
+    <link id="cyberFavicon" rel="icon" type="image/png" href="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&amp;display=swap">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; font-family: 'Segoe UI', sans-serif; background-color: #02040a; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #020408; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #e2e8f0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         
         .detroit-matrix {
-            position: absolute; width: 100%; height: 100%;
+            position: absolute; 
+            width: 100%; 
+            height: 100%;
             background: linear-gradient(rgba(2,4,10,0.4), rgba(2,4,10,0.65)),
-                        url('https://shared.steamstatic.com/community_assets/images/items/1222140/c70ab15245f0cf56b8d0da1929b178259e5bbad3.jpg') no-repeat center center;
+            url('https://shared.steamstatic.com/community_assets/images/items/1222140/c70ab15245f0cf56b8d0da1929b178259e5bbad3.jpg') no-repeat center center;
             background-size: cover;
             filter: grayscale(15%) contrast(110%) blur(4px);
             transform: scale(1.02);
@@ -20,18 +24,31 @@
         }
 
         .interface-container {
-            position: relative; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center; z-index: 2;
+            position: relative; 
+            width: 100%; 
+            height: 100%;
+            display: flex; 
+            justify-content: center;
+            align-items: center; 
+            z-index: 2;
             padding: 15px;
         }
 
-        /* Полупрозрачное табло (адаптивный матовый Glassmorphism) */
         .cyber-panel {
-            width: 100%; max-width: 650px; height: 85vh; max-height: 600px;
-            background: rgba(6, 10, 20, 0.8); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(56, 189, 248, 0.14); border-radius: 16px;
+            width: 100%; 
+            max-width: 650px; 
+            height: 85vh;
+            max-height: 600px;
+            background: rgba(6, 10, 20, 0.8); 
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(56, 189, 248, 0.14); 
+            border-radius: 16px;
             box-shadow: 0 0 24px rgba(0, 191, 255, 0.06), inset 0 0 16px rgba(56, 189, 248, 0.02);
-            padding: 24px; display: flex; flex-direction: column; justify-content: space-between;
+            padding: 24px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
             transition: all 0.3s ease-in-out;
         }
         
@@ -46,6 +63,7 @@
         }
         
         .panel-header {
+            position: relative;
             display: flex; 
             justify-content: space-between; 
             align-items: center;
@@ -73,136 +91,445 @@
             letter-spacing: 1.5px;
             text-transform: uppercase;
         }
-
+        
         .connor-led-container {
             width: 26px; 
             height: 26px;
             position: absolute; 
-            right: 35px;
+            right: 0px;
             flex-shrink: 0;
         }
         
         .led-layer {
-            position: absolute !important;
-            width: 26px !important;
-            height: 26px !important;
+            position: absolute;
+            width: 26px;
+            height: 26px;
             background-repeat: no-repeat;
             background-position: center center;
             background-size: contain;
             opacity: 0;
             transform: rotate(-120deg);
-            mix-blend-mode: normal !important;
-            filter: drop-shadow(0 0 6px rgba(56,189,248,0.6)) !important;
-            outline: none !important;
-            border: none !important;
+            mix-blend-mode: normal;
+            filter: drop-shadow(0 0 6px rgba(56,189,248,0.6));
+            outline: none;
+            border: none;
             transition: opacity 0.45s ease-in-out, filter 0.45s ease-in-out, transform 0.6s cubic-bezier(0.25,1,0.5,1);
         }
 
         .led-layer.active {
-            opacity: 1 !important;
-            transform: rotate(0deg) !important;
+            opacity: 1;
+            transform: rotate(0deg);
         }
 
         /* Цветовые слои */
-        .led-layer.blue.active { animation: led-breathe-blue 4s ease-in-out infinite !important; }
-		.led-layer.blue {
-		    background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png');
-		    filter: drop-shadow(0 0 6px rgba(56,189,248,0.6));
-		}
-		.led-layer.blue-yellow {
-		    background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/75457be640df45752300284102081f792429ef56.png');
-		    filter: drop-shadow(0 0 7px rgba(125,211,252,0.6));
-		}
-		.led-layer.yellow.active { animation: led-breathe-yellow 2.5s ease-in-out infinite !important; }
-		.led-layer.yellow {
-		    background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/47b9de6e8172de09b4e346493c6b11f385eba696.png');
-		    filter: drop-shadow(0 0 8px rgba(245,158,11,0.7));
-		}
-		.led-layer.yellow-red {
-		    background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/12cb24c68ce9b1118283e84a7b0b92722ea622e0.png');
-		    filter: drop-shadow(0 0 9px rgba(251,146,60,0.7));
-		}
-		.led-layer.red.active { animation: led-breathe-red 1.5s ease-in-out infinite !important; }
-		.led-layer.red {
-		    background-image: url('https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/1222140/956fb74d8b8801a2761c8dc8559d316e3556a97b.png');
-		    filter: drop-shadow(0 0 10px rgba(239,68,68,0.8));
-		}
-		
-		@keyframes led-breathe-blue {
-            0%, 100% { filter: drop-shadow(0 0 4px rgba(56,189,248,0.4)) !important; opacity: 0.85 !important; }
-            50% { filter: drop-shadow(0 0 10px rgba(56,189,248,0.8)) !important; opacity: 1 !important; }
+        .led-layer.blue.active { animation: led-breathe-blue 4s ease-in-out infinite; }
+        .led-layer.blue {
+            background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png');
+            filter: drop-shadow(0 0 6px rgba(56,189,248,0.6));
+        }
+        .led-layer.blue-yellow {
+            background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/75457be640df45752300284102081f792429ef56.png');
+            filter: drop-shadow(0 0 7px rgba(125,211,252,0.6));
+        }
+        .led-layer.yellow.active { animation: led-breathe-yellow 2.5s ease-in-out infinite; }
+        .led-layer.yellow {
+            background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/47b9de6e8172de09b4e346493c6b11f385eba696.png');
+            filter: drop-shadow(0 0 8px rgba(245,158,11,0.7));
+        }
+        .led-layer.yellow-red {
+            background-image: url('https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/12cb24c68ce9b1118283e84a7b0b92722ea622e0.png');
+            filter: drop-shadow(0 0 9px rgba(251,146,60,0.7));
+        }
+        .led-layer.red.active { animation: led-breathe-red 1.5s ease-in-out infinite; }
+        .led-layer.red {
+            background-image: url('https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/1222140/956fb74d8b8801a2761c8dc8559d316e3556a97b.png');
+            filter: drop-shadow(0 0 10px rgba(239,68,68,0.8));
+        }
+        
+        @keyframes led-breathe-blue {
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(56,189,248,0.4)); opacity: 0.85; }
+            50% { filter: drop-shadow(0 0 10px rgba(56,189,248,0.8)); opacity: 1; }
         }
 
         @keyframes led-breathe-yellow {
-            0%, 100% { filter: drop-shadow(0 0 5px rgba(245,158,11,0.42)) !important; opacity: 0.8 !important; }
-            50% { filter: drop-shadow(0 0 12px rgba(245,158,11,0.85)) !important; opacity: 1 !important; }
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(245,158,11,0.42)); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 12px rgba(245,158,11,0.85)); opacity: 1; }
         }
 
         @keyframes led-breathe-red {
-            0%, 100% { filter: drop-shadow(0 0 4px rgba(239,68,68,0.45)) !important; opacity: 0.75 !important; }
-            50% { filter: drop-shadow(0 0 15px rgba(239,68,68,0.98)) !important; opacity: 1 !important; }
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(239,68,68,0.45)); opacity: 0.75; }
+            50% { filter: drop-shadow(0 0 15px rgba(239,68,68,0.98)); opacity: 1; }
+        }
+
+        .chat-display { 
+            flex: 1; 
+            padding: 20px 0px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
         }
         
-        /* Окно вывода сообщений */
-        .chat-display { flex-grow: 1; margin: 15px 0; color: #9ca3af; font-size: 15px; line-height: 1.6; overflow-y: auto; padding-right: 5px; }
-        .ai-text { color: #9ca3af; border-left: 2px solid rgba(56, 189, 248, 0.4); padding-left: 15px; margin-bottom: 15px; }
-        .ai-text strong { color: #cbd5e1; font-weight: 600; }
-
-        /* Адаптивный инпут-конвейер */
-        .input-area { display: flex; gap: 12px; border-top: 1px solid rgba(56, 189, 248, 0.1); padding-top: 15px; flex-shrink: 0; align-items: center; }
-         
-        /* Кнопка-скрепка */
-        .file-upload-label {
-            display: flex; justify-content: center; align-items: center;
-            width: 42px; height: 42px; background: rgba(3, 5, 10, 0.4);
-            border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 8px;
-            cursor: pointer; transition: all 0.3s ease; flex-shrink: 0;
+        .ai-text { 
+            font-size: 13px; 
+            line-height: 1.6; 
+            color: #cbd5e1; 
+            background: transparent;
+            padding: 10px 12px; 
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            width: fit-content; 
+            max-width: 90%; 
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            margin-bottom: 10px;
         }
-        .file-upload-label:hover { border-color: rgba(56,189,248,0.5) !important; background: rgba(56,189,248,0.04) !important; }
-        .file-upload-label svg { width: 22px !important; height: 22px !important; transition: all 0.3s ease !important; }
-        .file-upload-label svg path { fill: rgba(56,189,248,0.45) !important; transition: all 0.3s ease !important; }
-        .file-upload-label:hover svg path { fill: #38bdf8 !important; }
 
-        #userInput {
-			flex-grow: 1 !important;
-			max-width: calc(100% - 120px) !important;
-			background: rgba(3,5,10,0.4) !important;
-			border: 1px solid rgba(56,189,248,0.15) !important;
-			border-radius: 8px !important;
-			padding: 12px 15px !important;
-			color: #cbd5e1 !important;
-			font-size: 14px !important;
-			outline: none !important;
-			font-family: inherit !important;
-			min-width: 0 !important;
-			height: 42px !important;
-			transition: all 0.3s ease !important;
-			}
-			#userInput::placeholder { color: rgba(255,255,255,0.22) !important; }
-			#userInput:focus { border-color: rgba(56,189,248,0.4) !important; background: rgba(3,5,10,0.6) !important; }
-			    
-        #sendBtn {
-		    background: transparent !important;
-		    border: 1px solid rgba(56,189,248,0.2) !important;
-		    border-radius: 8px !important;
-		    height: 42px !important;
-		    width: 45px !important;
-		    display: flex !important;
-		    justify-content: center !important;
-		    align-items: center !important;
-		    cursor: pointer !important;
-		    transition: all 0.3s ease !important;
-		    flex-shrink: 0 !important;
-		    box-sizing: border-box !important;
-		    margin-right: 5px !important;
-		}
-		#sendBtn svg { width: 15px !important; height: 15px !important; fill: rgba(56,189,248,0.5) !important; transition: all 0.3s ease !important; }
-		#sendBtn:hover { background: rgba(56,189,248,0.06) !important; border-color: rgba(56,189,248,0.6) !important; }
-		#sendBtn:hover svg { fill: #38bdf8 !important; transform: translateX(1px) !important; }
+        .ai-text.connor-bubble {
+            align-self: flex-start;
+            background: transparent;
+            border: 1px solid rgba(56,189,248,0.15);
+            border-bottom-left-radius: 2px;
+        }
+        .ai-text.connor-bubble.file-reply-gap {
+            margin-bottom: 20px; 
+        }
+        .ai-text.operator-bubble {
+            min-width: 140px Block; 
+            max-width: 75%;
+            padding: 12px 16px;
+            display: inline-block
+            align-self: flex-end;
+            background: transparent;
+            border: 1px solid rgba(56,189,248,0.15);
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-text.selectable-user-msg { 
+            cursor: pointer; 
+            border-color: #38bdf8; 
+            box-shadow: 0 0 12px rgba(56,189,248,0.3), inset 0 0 6px rgba(56, 189, 248, 0.25);  
+        }
+        .ai-text.selectable-user-msg:active { 
+            transition: none;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.55); inset 0 0 10px rgba(56, 189, 248, 0.25); 
+        }
+
+        .input-area { 
+            display: flex; 
+            gap: 12px; 
+            border-top: 1px solid rgba(56, 189, 248, 0.1); 
+            padding-top: 15px; 
+            flex-shrink: 0;
+            align-items: center; 
+        }
+        
+        .input-wrapper { 
+            flex: 1; 
+            position: relative; 
+            display: flex; 
+            align-items: center; 
+            background: transparent; 
+            border: 1px solid rgba(56, 189, 248, 0.15); 
+            border-radius: 8px; 
+            transition: border-color 0.2s; 
+        }
+        .input-wrapper:focus-within { 
+            border-color: #38bdf8; 
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.15); 
+        }
+        
+        #userInput { 
+            width: 90%; 
+            background: transparent; 
+            border: none; 
+            outline: none; 
+            padding: 14px 15px 14px 55px;
+            color: #f8fafc; 
+            -webkit-appearance: none; 
+            appearance: none; 
+            font-size: 14px; 
+        }
+        
+        .plus-dropdown-menu { 
+            display: flex; 
+            gap: 15px; 
+            background: rgba(6, 10, 20, 0.8); 
+            backdrop-filter: blur(24px); 
+            -webkit-backdrop-filter: blur(24px); 
+            border: 1px solid rgba(56, 189, 248, 0.2); 
+            padding: 10px 15px; 
+            border-radius: 8px;
+            position: absolute; 
+            bottom: 75px; 
+            left: 20px; 
+            opacity: 0; 
+            transform: translateY(10px); 
+            pointer-events: none; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 100; 
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); 
+        }
+        .plus-dropdown-menu.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        
+        .menu-icon-btn { 
+            color: rgba(56, 189, 248, 0.5); 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: color 0.2s, transform 0.2s;
+            width: 24px; 
+            height: 24px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .menu-icon-btn:hover { color: #38bdf8; transform: scale(1.1); }
+        .menu-icon-btn.danger-btn:hover { color: #ef4444; }
+        .controls-row { display: flex; gap: 10px; width: 100%; align-items: center; }
+        
+        .plus-toggle-label { 
+            position: absolute; 
+            left: 12px; 
+            cursor: pointer; 
+            color: rgba(56, 189, 248, 0.4); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: all 0.25s ease; 
+            width: 24px; 
+            height: 24px; 
+            background: transparent; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        .plus-toggle-label.rotated { transform: rotate(135deg); color: #ef4444; background: transparent; }
+        
+        #sendBtn { 
+            position: absolute; 
+            right: 0px;
+            background: transparent;
+            border: none;
+            color: rgba(56, 189, 248, 0.4);
+            cursor: pointer; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            transition: all 0.25s ease;
+            padding: 0 8px;
+            width: 47px;
+            height: 47px;
+            font-size: 15px;
+            z-index: 100; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        #sendBtn:active { 
+            color: #38bdf8; 
+            transform: scale(1.15); 
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.6); 
+            background: transparent; 
+        }
+        
+        .ai-text.cascade-fade-out {
+            animation: cyber-fade-out 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
+            pointer-events: none;
+        }
+           
+        .chat-display { 
+            flex: 1; 
+            padding: 20px 0px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .ai-text { 
+            font-size: 13px; 
+            line-height: 1.6; 
+            color: #cbd5e1; 
+            background: transparent !important;
+            padding: 10px 12px; 
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: relative;
+            width: fit-content; 
+            max-width: 90%; 
+            position: relative;
+            -webkit-tap-highlight-color: transparent !important;
+            margin-bottom: 10px;
+        }
+
+        .ai-text.connor-bubble { align-self: flex-start; border-bottom-left-radius: 2px; }
+        .ai-text.connor-bubble.file-reply-gap { margin-bottom: 30px; }
+        .ai-text.operator-bubble { align-self: flex-end; border-bottom-right-radius: 2px; }
+
+        .ai-text.selectable-user-msg { 
+            cursor: pointer; 
+            border-color: #38bdf8; 
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3), inset 0 0 6px rgba(56, 189, 248, 0.1);  
+        }
+
+        .file-badge-container {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            position: absolute;
+            bottom: 65px;
+            left: 12px;
+            z-index: 95;
+            padding: 5px;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        #cubeStack {
+            display: flex;
+            align-items: center;
+        }
+
+        .file-cube-geometry {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            min-width: 45px;
+            height: 45px;
+            flex-shrink: 0;
+            background: #38bdf8;
+            border: none;
+            border-radius: 6px;
+            color: #020408;
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(56, 189, 248, 0.2);
+            transition: all 0.2s ease;
+            margin-left: 0;
+            transform: rotate(-4deg); 
+            z-index: 1;
+        }
+
+        .file-cube-geometry:not(:first-child) {
+            margin-left: -14px;
+            transform: rotate(-4deg);
+            box-shadow: -5px 0 10px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(56, 189, 248, 0.2);
+            z-index: 2;
+        }
+        .file-cube-geometry:nth-child(3) {
+            transform: rotate(-4deg);
+            box-shadow: -5px 0 10px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(56, 189, 248, 0.2);
+            z-index: 3;
+        }
+
+        .file-cascade-close {
+            cursor: pointer;
+            color: #ef4444;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .file-cascade-close:hover { color: #f87171; transform: scale(1.15); }
+
+        .file-badge-container.file-pulse-launch {
+            animation: cyber-puf-cascade 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+        }
+        
+        @keyframes cyber-puf-cascade {
+            0% { 
+                transform: scale(1) translateY(0); 
+                opacity: 1 !important; 
+                filter: blur(0px); 
+            }
+            50% { 
+                transform: scale(1.05) translateY(-10px); 
+                filter: blur(1px); 
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.4) !important; 
+            }
+            100% { 
+                transform: scale(0.5) scaleY(0) translateY(-30px); /* Полное плоское схлопывание слоя в нуль! */
+                opacity: 0 !important; 
+                filter: blur(4px); 
+            }
+        }
+
+        .inner-bubble-file-wrapper {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+            width: auto;
+            position: absolute;
+            bottom: -23px;
+            right: 12px; 
+            z-index: 99;
+        }
+
+        .inner-bubble-file-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            min-width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            background: #38bdf8; 
+            border: none;
+            border-radius: 6px;
+            color: #020408;
+            font-family: 'Orbitron', monospace;
+            font-size: 8px;
+            font-weight: bold;
+            padding: 0;
+            line-height: 32px;
+            text-indent: -1px;
+            text-align: center;
+            transform: rotate(-4deg);
+            box-shadow: 0 4px 10px rgba(56, 189, 248, 0.2);
+            z-index: 1;
+        }
+        
+        .inner-bubble-file-badge:not(:first-child) {
+            margin-left: -14px;
+            background: #38bdf8;
+            transform: rotate(-4deg);
+            box-shadow: -5px 0 10px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(56, 189, 248, 0.2);
+            z-index: 2;
+        }
+
+        .inner-bubble-file-badge:nth-child(3) {
+            background: #38bdf8;
+            transform: rotate(-4deg);
+            box-shadow: -5px 0 10px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(56, 189, 248, 0.2);
+            z-index: 3;
+        }
+        
+        @keyframes cyber-fade-out {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0px) drop-shadow(0 0 4px rgba(56, 189, 248, 0.15));
+            }
+            50% {
+                filter: blur(2px) drop-shadow(0 0 8px rgba(56, 189, 248, 0.3));
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.92);
+                filter: blur(5px);
+                margin-bottom: -45px;
+                padding: 0 14px;
+                border-top-width: 0;
+                border-bottom-width: 0;
+            }
+        }
+        
     </style>
 </head>
-
 <body>
+
     <div class="detroit-matrix"></div>
     <div class="interface-container">
         <div class="cyber-panel">
@@ -219,182 +546,390 @@
                     <div id="ledRed" class="led-layer red"></div>
                 </div>
             </div>
-            <div class="chat-display">
-                <p class="ai-text"><strong>Connor:</strong> «My name is Connor. I am the android sent from CyberLife. System online. I can process your commands, analyze PDF documents and scan multi-page invoices via OCR. Ready for analysis.»</p>
-            </div>
+            <div class="chat-display"></div>
             <div class="input-area">
-                <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
-                <label for="fileInput" class="file-upload-label" title="Загрузить файл (PDF, фото)">
-                    <svg viewBox="-4 -4 32 32" style="display: block;"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-3.31 2.69-6 6-6s6 2.69 6 6v12.5c0 4.42-3.58 8-8 8s-8-3.58-8-8V6h2v11.5c0 3.31 2.69 6 6 6s6-2.69 6-6V5c0-2.21-1.79-4-4-4s-4 1.79-4 4v12.5c0 1.1.9 2 2 2s2-.9 2-2V6h2z"/></svg>
-                </label>
-                <input type="text" id="userInput" placeholder="Ожидание запроса...">
-                <button id="sendBtn" onclick="sendMessage()" aria-label="Отправить">
-                    <svg viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42L16.86 11H5v2z"/></svg>
-                </button>
+                <div class="plus-dropdown-menu" id="plusMenu">
+                    <label for="fileInput" class="menu-icon-btn" title="Прикрепить файл">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </label>
+                    <div class="menu-icon-btn" title="Редактировать старый запрос" onclick="enableRollbackMode()">
+                        <i class="fa-solid fa-pen"></i>
+                    </div>
+                    <div class="menu-icon-btn danger-btn" title="Очистить память андроида" onclick="clearAllChatMemory()">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; width: 100%; position: relative;">
+                    <div id="fileBadgeContainer" class="file-badge-container">
+                        <div id="cubeStack"></div>
+                        <div class="file-cascade-close" onclick="cancelFileAttachment()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                    </div>
+                <div class="controls-row">
+                    <div class="input-wrapper">
+                        <div class="plus-toggle-label" id="plusBtn" onclick="togglePlusMenu()">
+                            <i class="fa-solid fa-plus" style="font-size: 15px;"></i>
+                        </div>
+                        <input type="text" id="userInput" placeholder="Ожидание запроса..." autocomplete="off">
+                        <input type="file" id="fileInput" style="display: none;">
+                    </div>
+                    <button id="sendBtn" onclick="sendMessage()"><i class="fa-solid fa-arrow-right"></i></button>
+                </div>
             </div>
         </div>
-    </div>            
-    
+    </div>
+</div>
+
 <script>
-'use strict';
-	const chatDisplay = document.querySelector('.chat-display');
-	const userInput = document.getElementById('userInput');
-	const sendBtn = document.getElementById('sendBtn');
-	const fileInput = document.getElementById('fileInput');
-	const led = document.querySelector('.connor-led') || document.querySelector('.led-layer');
+  "use strict";
 
-    const BACKEND_URL = 'https://cyberlife.outlawassistant.online:2053/';
-    const UPLOAD_URL = 'https://cyberlife.outlawassistant.online:2053/';
+  const BACKEND_URL = '/api/connor/chat';
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-    let chatHistory;
-		try {
-		    chatHistory = JSON.parse(localStorage.getItem('connor_chat_history')) || [];
-		} catch (e) {
-		    chatHistory = [];
-		}
-		
-    function renderHistory() {
-	    if (!Array.isArray(chatHistory) || chatHistory.length === 0) return;
-	    chatDisplay.innerHTML = '';
-	    chatHistory.forEach(msg => {
-	        const p = document.createElement('p');
-	        p.className = 'ai-text';
-	        p.style.borderLeft = msg.role === 'user'
-	            ? '2px solid rgba(255,255,255,0.15)'
-	            : '2px solid rgba(56,189,248,0.4)';
-	        p.style.marginBottom = '15px';
-	        p.innerHTML = `<strong>${msg.role === 'user' ? 'Operator' : 'Connor'}:</strong> ${msg.content}`;
-	        chatDisplay.appendChild(p);
-	    });
-	    chatDisplay.scrollTop = chatDisplay.scrollHeight;
-	}
+  let chatHistory = [];
+  let isRollbackModeActive = false;
+  let clientSideFileBuffer = "";
 
+  // DOM элементы
+  let chatDisplay, userInput, plusMenu, plusBtn, fileInput;
+
+  function init() {
+    chatDisplay = document.querySelector('.chat-display');
+    userInput = document.getElementById('userInput');
+    plusMenu = document.getElementById('plusMenu');
+    plusBtn = document.getElementById('plusBtn');
+    fileInput = document.getElementById('fileInput');
+
+    if (fileInput) fileInput.addEventListener('change', onFileChange);
+    if (userInput) userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
     renderHistory();
+  }
 
-    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  function togglePlusMenu() {
+    if (!plusMenu || !plusBtn) return;
+    plusMenu.classList.toggle('active');
+    plusBtn.classList.toggle('rotated');
+  }
 
-	function forceLedLayer(activeId) {
-	    ['ledBlue', 'ledBlueYellow', 'ledYellow', 'ledYellowRed', 'ledRed'].forEach(id => {
-	        const el = document.getElementById(id);
-	        if (el) el.classList.remove('active');
-	    });
-	    const activeEl = document.getElementById(activeId);
-	    if (activeEl) activeEl.classList.add('active');
-	}
+  function forceLedLayer(activeId) {
+    ['ledBlue', 'ledBlueYellow', 'ledYellow', 'ledYellowRed', 'ledRed'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+    const activeEl = document.getElementById(activeId);
+    if (activeEl) activeEl.classList.add('active');
+  }
 
-    /* Функция мгновенной смены неонового диода на вкладке браузера */
-    function changeFavicon(state) {
-        const favicon = document.getElementById('cyberFavicon');
-        if (state === 'thinking') {
-            favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/47b9de6e8172de09b4e346493c6b11f385eba696.png'; // Твоя Желтая!
-        } else if (state === 'error') {
-            favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/956fb74d8b8801a2761c8dc8559d316e3556a97b.png'; // Твоя Красная!
+  function changeFavicon(state) {
+    const favicon = document.getElementById('cyberFavicon');
+    if (!favicon) return;
+    if (state === 'thinking') {
+      favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/47b9de6e8172de09b4e346493c6b11f385eba696.png';
+    } else if (state === 'error') {
+      favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/956fb74d8b8801a2761c8dc8559d316e3556a97b.png';
+    } else {
+      favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png';
+    }
+  }
+
+  async function animateToThinking() { changeFavicon('thinking'); forceLedLayer('ledBlueYellow'); await sleep(400); forceLedLayer('ledYellow'); }
+  async function animateBackToNormal() { changeFavicon('blue'); forceLedLayer('ledBlueYellow'); await sleep(400); forceLedLayer('ledBlue'); }
+  async function animateToError() { changeFavicon('error'); forceLedLayer('ledYellowRed'); await sleep(400); forceLedLayer('ledRed'); }
+  
+  function cancelFileAttachment() {
+  clientSideFileBuffer = '';
+  document.getElementById('fileBadgeContainer').style.display = 'none';
+  document.getElementById('cubeStack').innerHTML = '';
+  if (fileInput) fileInput.value = '';
+}
+
+  function addMessagesToDisplay() {
+    if (!chatDisplay) return;
+    chatDisplay.innerHTML = "";
+    
+    chatHistory.forEach((msg, index) => {
+        const p = document.createElement('p');
+        p.className = 'ai-text';
+
+        if (msg.role === 'user') {
+            p.classList.add('operator-bubble'); 
         } else {
-            favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png'; // Твоя Синяя!
+            p.classList.add('connor-bubble');
+            if (index > 0 && chatHistory[index - 1].fileFormats && chatHistory[index - 1].fileFormats.length > 0) {
+                p.classList.add('file-reply-gap');
+            }
+        }
+
+        if (msg.content) {
+            const textNode = document.createTextNode(msg.content);
+            p.appendChild(textNode);
+        }
+
+        if (msg.fileFormats && msg.fileFormats.length > 0) {
+            if (msg.content) p.appendChild(document.createElement('br'));
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'inner-bubble-file-wrapper';
+            
+            msg.fileFormats.forEach(fmt => {
+                const badge = document.createElement('div');
+                
+                badge.classList.add('inner-bubble-file-badge'); 
+                badge.textContent = fmt.trim().toUpperCase();
+                
+                wrapper.appendChild(badge);
+            });
+            p.appendChild(wrapper);
+        }
+            
+            chatDisplay.appendChild(p);
+        });
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+  function renderHistory() {
+    if (!chatDisplay) return;
+    
+    if (chatHistory.length === 0) {
+        if (!chatDisplay.querySelector('.welcome-message')) {
+            chatDisplay.innerHTML = '';
+            const welcomeP = document.createElement('p');
+            welcomeP.className = 'ai-text connor-bubble welcome-message';
+            welcomeP.textContent = 'My name is Connor. I am the android sent from CyberLife. System online and ready for analysis.';
+            chatDisplay.appendChild(welcomeP);
+        }
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        return;
+    }
+
+    const welcome = chatDisplay.querySelector('.welcome-message');
+    if (welcome) {
+        welcome.classList.add('cascade-fade-out');
+        setTimeout(addMessagesToDisplay, 400);
+    } else {
+        addMessagesToDisplay();
+    }
+  }
+
+  async function executeHistoryRollback(targetIndex) {
+    isRollbackModeActive = false;
+    const targetMessageText = chatHistory[targetIndex] && chatHistory[targetIndex].content;
+    const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text') : [];
+
+    let maxAnimationDelay = 0;
+        
+        for (let i = chatHistory.length - 1; i >= targetIndex; i--) {
+            if (bubbles[i]) {
+                const delayAmount = (chatHistory.length - 1 - i) * 80;
+                maxAnimationDelay = Math.max(maxAnimationDelay, delayAmount);
+                setTimeout(() => { bubbles[i].classList.add('cascade-fade-out'); }, delayAmount);
+            }
+        }
+        
+        const totalAnimationTime = maxAnimationDelay + 400;
+        
+        try {
+            if (userInput) {
+                userInput.value = targetMessageText || '';
+                userInput.focus();
+            }
+
+            await animateToThinking();
+            
+            const response = await fetch(BACKEND_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'branch', index: targetIndex })
+            });
+            if (!response.ok) throw new Error(response.statusText);
+            
+            await sleep(totalAnimationTime);
+            
+            chatHistory = chatHistory.slice(0, targetIndex);
+            renderHistory();
+            await animateBackToNormal();
+        } catch (err) {
+            await animateToError();
+            isRollbackModeActive = false;
+            renderHistory();
+        } finally {
+            if (userInput) userInput.placeholder = "Ожидание запроса...";
         }
     }
+  
+  async function clearAllChatMemory() {
+    togglePlusMenu();
+    if (!confirm("Внимание: стереть память андроида и начать новый чат?")) return;
+    
+    const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text') : [];
+    let maxDelay = 0;
+    
+    bubbles.forEach((bubble, index) => {
+      const delayAmount = index * 80;
+      maxDelay = Math.max(maxDelay, delayAmount);
+      setTimeout(() => { bubble.classList.add('cascade-fade-out'); }, delayAmount);
+    });
 
-    async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
-
-        chatHistory.push({ role: 'user', content: text });
-        localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
-        userInput.value = '';
-        renderHistory();
-
-	async function animateToThinking() {
-		forceLedLayer('ledBlueYellow');
-		await sleep(400);
-		forceLedLayer('ledYellow');
-	}
-
-	async function animateBackToNormal() {
-		forceLedLayer('ledBlueYellow');
-		await sleep(400);
-		forceLedLayer('ledBlue');
-	}
-
-	async function animateToError() {
-		forceLedLayer('ledYellowRed');
-		await sleep(400);
-		forceLedLayer('ledRed');
-	}
-
-    async function animateErrorToNormal() {
-        changeFavicon('blue'); 
-        forceLedLayer('ledYellowRed');
-        await sleep(300);
-        forceLedLayer('ledYellow');
-        await sleep(300);
-        forceLedLayer('ledBlueYellow');
-        await sleep(300);
-        forceLedLayer('ledBlue');
+    try {
+      await animateToThinking();
+      const response = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear' })
+      });
+      if (!response.ok) throw new Error(response.statusText);
+      
+      await sleep(maxDelay + 400);
+      
+      chatHistory = [];
+      renderHistory();
+      await animateBackToNormal();
+    } catch (err) {
+      await animateToError();
     }
+  }
 
-	await animateToThinking();
-	const slidingWindow = chatHistory.slice(-15);
+  function enableRollbackMode() {
+    if (chatHistory.filter(msg => msg.role === 'user').length === 0) {
+      alert("История диалога пуста. Нечего редактировать");
+      togglePlusMenu();
+      return;
+    }
+    isRollbackModeActive = true;
+    renderHistory();
+    togglePlusMenu();
+  }
 
-	try {
-	    const response = await fetch(BACKEND_URL, {
-	        method: 'POST',
-	        headers: { 'Content-Type': 'application/json' },
-	        body: JSON.stringify({ message: text, history: slidingWindow })
-	    });
-	    const data = await response.json();
-	    if (data && data.message) {
-	        chatHistory.push({ role: 'assistant', content: data.message });
-	        localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
-	        renderHistory();
-	        await animateBackToNormal();
-	    } else {
-	        throw new Error('Backend returned error');
-	    }
-	} catch (err) {
-	    await animateToError();
-	    chatHistory.push({ role: 'assistant', content: '[Ошибка: не удалось получить ответ от сервера]' });
-	    localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
-	    renderHistory();
-	}
-	}
-	
-	/* Обработчик загрузки файла */
-	fileInput.addEventListener('change', async () => {
-	const file = fileInput.files[0];
-	if (!file) return;
-	
-	chatDisplay.innerHTML += `<p class="ai-text" style="border-left: 2px solid rgba(255,255,255,0.15);"><strong>System:</strong> Отправка документа "${file.name}" на анализ в ядро Киберлайф...</p>`;
-	chatDisplay.scrollTop = chatDisplay.scrollHeight;
-	
-	await animateToThinking();
-	const formData = new FormData();
-	formData.append('file', file);
-	
-	try {
-	    const response = await fetch(UPLOAD_URL, { method: 'POST', body: formData });
-	    const data = await response.json();
-	
-	    if (data && data.status === 'success') {
-	        chatHistory.push({ role: 'user', content: `[Отправлен файл на анализ: ${file.name}]` });
-	        chatHistory.push({ role: 'assistant', content: data.response });
-	        localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
-	        renderHistory();
-	        await animateBackToNormal();
-	    } else {
-	        throw new Error('Upload failed');
-	    }
-	} catch (err) {
-	    await animateToError();
-	    chatHistory.push({ role: 'assistant', content: '[Ошибка: загрузка файла не выполнена]' });
-	    localStorage.setItem('connor_chat_history', JSON.stringify(chatHistory));
-	    renderHistory();
-	} finally {
-	    fileInput.value = '';
-	}
-	});
+  async function sendMessage() {
+    if (isRollbackModeActive) isRollbackModeActive = false;
+    const text = userInput ? userInput.value.trim() : "";
+    
+    const attachedFormats = [];
+    const container = document.getElementById('fileBadgeContainer');
+    const cubeStack = document.getElementById('cubeStack');
+    const cubes = document.querySelectorAll('#cubeStack .file-cube-geometry');
+    
+    cubes.forEach(cube => {
+        if (cube.textContent) {
+            attachedFormats.push(cube.textContent.trim());
+        }
+    });
+    
+    if (!text && attachedFormats.length === 0) return;
+    
+    let finalPayloadMessage = text;
+		if (clientSideFileBuffer) {
+		    finalPayloadMessage = `[Анализ данных ${attachedFormats.join(', ')}]:\n${clientSideFileBuffer}\n${text}`;
+		}
+ 
+    const formatsBackup = attachedFormats.length > 0 ? [...attachedFormats] : null;
+    
+    chatHistory.push({ 
+        role: 'user', 
+        content: text ? text : "", 
+        fileFormats: formatsBackup
+    });
+    
+    if (userInput) userInput.value = "";
+    
+    renderHistory(); 
+    
+    if (container) {
+        container.classList.add('file-pulse-launch');
+        await sleep(180); 
+        if (cubeStack) cubeStack.innerHTML = ""; 
+        container.style.display = 'none';
+        container.classList.remove('file-pulse-launch');
+    }
+    
+    await animateToThinking();
+    
+    const slidingWindow = chatHistory.slice(Math.max(0, chatHistory.length - 15));
+    try {
+        const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'chat', message: finalPayloadMessage, history: slidingWindow })
+        });
+        if (!response.ok) throw new Error(response.statusText);
+        const data = await response.json();
+        if (data && data.message) {
+            chatHistory.push({ role: 'assistant', content: data.message });
+            renderHistory();
+            await animateBackToNormal();
+        } else {
+            throw new Error('No message in response');
+        }
+    } catch (err) {
+        await animateToError();
+        chatHistory.push({ role: 'assistant', content: '[Ошибка: сервер перегружен или недоступен]' });
+        renderHistory();
+    } finally {
+        clientSideFileBuffer = "";
+        if (userInput) userInput.placeholder = "Ожидание запроса...";
+    }
+}
 
-	userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); }); 
-	document.addEventListener('DOMContentLoaded', renderHistory);
+    function onFileChange() {
+        togglePlusMenu();
+        if (!fileInput) return;
+        
+        const file = fileInput.files[0]; 
+        if (!file) return;
+
+        const cubeStack = document.getElementById('cubeStack');
+        const container = document.getElementById('fileBadgeContainer');
+        const attachIcon = document.getElementById('attachIcon');
+        
+        if (cubeStack && cubeStack.children.length >= 3) {
+            alert("Превышен лимит: максимум 3 вложения в одну сессию отправки.");
+            fileInput.value = "";
+            return;
+        }
+
+        const fileExtension = file.name.split('.').pop().toUpperCase();
+        
+        if (attachIcon) attachIcon.className = "fa-solid fa-spinner fa-spin";
+        if (userInput) userInput.placeholder = "Введите подпись..."; 
+        
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            try {
+                clientSideFileBuffer = `\n[Добавить подпись ${file.name}]:\n${e.target.result}`;
+                
+                if (cubeStack && container) {
+                    container.classList.remove('file-pulse-launch');
+                    
+                    const newCube = document.createElement('div');
+                    newCube.className = 'file-cube-geometry';
+                    newCube.textContent = fileExtension;
+                    cubeStack.appendChild(newCube);
+                    
+                    container.style.display = 'flex';
+                }
+                if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
+            } catch (jsErr) {
+                console.error("Критический глитч вёрстки кубов:", jsErr);
+                if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
+                if (userInput) userInput.placeholder = "Ошибка системы.";
+            }
+        };
+        
+        reader.onerror = () => {
+		    if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
+		    if (userInput) userInput.placeholder = "Ошибка системы.";
+		};
+        
+        reader.readAsText(file);
+        fileInput.value = "";
+    }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 </script>
 </body>
 </html>
