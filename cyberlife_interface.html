@@ -195,10 +195,10 @@
             margin-top: 24px;
         }
         .ai-text.operator-bubble {
-            min-width: 140px Block; 
+            min-width: 140px block; 
             max-width: 75%;
             padding: 12px 16px;
-            display: inline-block
+            display: inline-block;
             align-self: flex-end;
             background: transparent;
             border: 1px solid rgba(56,189,248,0.15);
@@ -347,7 +347,7 @@
             font-size: 13px; 
             line-height: 1.6; 
             color: #cbd5e1; 
-            background: transparent !important;
+            background: transparent;
             padding: 10px 12px; 
             border: 1px solid rgba(56, 189, 248, 0.15);
             border-radius: 8px;
@@ -584,36 +584,46 @@
 
 <script>
   "use strict";
+const BACKEND_URL = '/api/connor/chat';
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-  const BACKEND_URL = '/api/connor/chat';
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+let chatHistory = [];
+let isRollbackModeActive = false;
+let clientSideFileBuffer = "";
+let sessionID = null; // Будет инициализирован в init()
 
-  let chatHistory = [];
-  let isRollbackModeActive = false;
-  let clientSideFileBuffer = "";
+// DOM элементы
+let chatDisplay, userInput, plusMenu, plusBtn, fileInput;
 
-  // DOM элементы
-  let chatDisplay, userInput, plusMenu, plusBtn, fileInput;
-
-  function init() {
-    chatDisplay = document.querySelector('.chat-display');
-    userInput = document.getElementById('userInput');
-    plusMenu = document.getElementById('plusMenu');
-    plusBtn = document.getElementById('plusBtn');
-    fileInput = document.getElementById('fileInput');
-
-    if (fileInput) fileInput.addEventListener('change', onFileChange);
-    if (userInput) userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
-    renderHistory();
+function initSessionID() {
+  sessionID = localStorage.getItem('cyberlife_session_id');
+  if (!sessionID) {
+    // Криптографический случайный ключ из миллиарда комбинаций Math.random
+    sessionID = 'gratskel_id_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    localStorage.setItem('cyberlife_session_id', sessionID);
   }
+}
 
-  function togglePlusMenu() {
-    if (!plusMenu || !plusBtn) return;
-    plusMenu.classList.toggle('active');
-    plusBtn.classList.toggle('rotated');
-  }
+function init() {
+  initSessionID();
+  chatDisplay = document.querySelector('.chat-display');
+  userInput = document.getElementById('userInput');
+  plusMenu = document.getElementById('plusMenu');
+  plusBtn = document.getElementById('plusBtn');
+  fileInput = document.getElementById('fileInput');
 
-  function forceLedLayer(activeId) {
+  if (fileInput) fileInput.addEventListener('change', onFileChange);
+  if (userInput) userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+  renderHistory();
+}
+
+function togglePlusMenu() {
+  if (!plusMenu || !plusBtn) return;
+  plusMenu.classList.toggle('active');
+  plusBtn.classList.toggle('rotated');
+}
+
+function forceLedLayer(activeId) {
     ['ledBlue', 'ledBlueYellow', 'ledYellow', 'ledYellowRed', 'ledRed'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
@@ -637,304 +647,328 @@
   async function animateToThinking() { changeFavicon('thinking'); forceLedLayer('ledBlueYellow'); await sleep(400); forceLedLayer('ledYellow'); }
   async function animateBackToNormal() { changeFavicon('blue'); forceLedLayer('ledBlueYellow'); await sleep(400); forceLedLayer('ledBlue'); }
   async function animateToError() { changeFavicon('error'); forceLedLayer('ledYellowRed'); await sleep(400); forceLedLayer('ledRed'); }
-  
-  function cancelFileAttachment() {
-  clientSideFileBuffer = '';
+
+function cancelFileAttachment() {
+  clientSideFileBuffer = "";
   document.getElementById('fileBadgeContainer').style.display = 'none';
-  document.getElementById('cubeStack').innerHTML = '';
-  if (fileInput) fileInput.value = '';
+  document.getElementById('cubeStack').innerHTML = "";
+  if (fileInput) fileInput.value = "";
 }
 
-    function addMessagesToDisplay() {
-	    if (!chatDisplay) return;
-	    chatDisplay.innerHTML = "";
-	    
-	    chatHistory.forEach((msg, index) => {
-	        const p = document.createElement('p');
-	        p.className = 'ai-text';
-	
-	        if (msg.role === 'user') {
-	            p.classList.add('operator-bubble');
-	            
-	            // ДОБАВЛЯЕМ ПОДСВЕТКУ В РЕЖИМЕ РЕДАКТИРОВАНИЯ
-	            if (isRollbackModeActive) {
-	                p.classList.add('selectable-user-msg');
-	                p.style.cursor = 'pointer';
-	                p.addEventListener('click', () => executeHistoryRollback(index));
-	            }
-	        } else {
-	            p.classList.add('connor-bubble');
-	            if (index > 0 && chatHistory[index - 1].fileFormats && chatHistory[index - 1].fileFormats.length > 0) {
-	                p.classList.add('file-reply-gap');
-	            }
-	        }
-	
-	        if (msg.content) {
-	            const textNode = document.createTextNode(msg.content);
-	            p.appendChild(textNode);
-	        }
-	
-	        if (msg.fileFormats && msg.fileFormats.length > 0) {
-	            if (msg.content) p.appendChild(document.createElement('br'));
-	            
-	            const wrapper = document.createElement('div');
-	            wrapper.className = 'inner-bubble-file-wrapper';
-	            
-	            msg.fileFormats.forEach(fmt => {
-	                const badge = document.createElement('div');
-	                badge.classList.add('inner-bubble-file-badge'); 
-	                badge.textContent = fmt.trim().toUpperCase();
-	                wrapper.appendChild(badge);
-	            });
-	            p.appendChild(wrapper);
-	        }
-	            
-	        chatDisplay.appendChild(p);
-	    });
-	    chatDisplay.scrollTop = chatDisplay.scrollHeight;
-	}
-    
-  function renderHistory() {
-    if (!chatDisplay) return;
-    
-    if (chatHistory.length === 0) {
-        if (!chatDisplay.querySelector('.welcome-message')) {
-            chatDisplay.innerHTML = '';
-            const welcomeP = document.createElement('p');
-            welcomeP.className = 'ai-text connor-bubble welcome-message';
-            welcomeP.textContent = 'My name is Connor. I am the android sent from CyberLife. System online and ready for analysis.';
-            chatDisplay.appendChild(welcomeP);
-        }
-        chatDisplay.scrollTop = chatDisplay.scrollHeight;
-        return;
-    }
+function addMessagesToDisplay() {
+  if (!chatDisplay) return;
+  chatDisplay.innerHTML = "";
 
-    const welcome = chatDisplay.querySelector('.welcome-message');
-    if (welcome) {
-        welcome.classList.add('cascade-fade-out');
-        setTimeout(addMessagesToDisplay, 400);
-    } else {
-        addMessagesToDisplay();
+  chatHistory.forEach((msg, index) => {
+    const p = document.createElement('p');
+    p.className = 'ai-text';
+
+    if (msg.role === 'user') {
+      p.classList.add('operator-bubble');
+
+      if (isRollbackModeActive) {
+        p.classList.add('selectable-user-msg');
+        p.style.cursor = 'pointer';
+        p.addEventListener('click', () => executeHistoryRollback(index));
+      } else {
+        p.classList.add('connor-bubble');
+        if (index > 0 && chatHistory[index - 1].fileFormats && chatHistory[index - 1].fileFormats.length > 0) {
+          p.classList.add('file-reply-gap');
+        }
+      }
+
+      if (msg.content) {
+        const textNode = document.createTextNode(msg.content);
+        p.appendChild(textNode);
+      }
+
+      if (msg.fileFormats && msg.fileFormats.length > 0) {
+        if (msg.content) p.appendChild(document.createElement('br'));
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'inner-bubble-file-wrapper';
+
+        msg.fileFormats.forEach(fmt => {
+          const badge = document.createElement('div');
+          badge.classList.add('inner-bubble-file-badge');
+          badge.textContent = fmt.trim().toUpperCase();
+          wrapper.appendChild(badge);
+        });
+        p.appendChild(wrapper);
+      }
+
+      chatDisplay.appendChild(p);
+    } 
+    else if (msg.role === 'assistant') { 
+      p.classList.add('connor-bubble');
+      
+      if (msg.content) {
+        const textNode = document.createTextNode(msg.content);
+        p.appendChild(textNode);
+      }
+      
+      chatDisplay.appendChild(p);
+    }
+  });
+
+  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+}
+
+function renderHistory() {
+  if (!chatDisplay) return;
+
+  if (chatHistory.length === 0) {
+    if (!chatDisplay.querySelector('.welcome-message')) {
+      chatDisplay.innerHTML = "";
+      const welcomeP = document.createElement('p');
+      welcomeP.className = 'ai-text connor-bubble welcome-message';
+      welcomeP.textContent = 'My name is Connor. I am the android sent from CyberLife. System online and ready for analysis.';
+      chatDisplay.appendChild(welcomeP);
+    }
+    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    return;
+  }
+
+  const welcome = chatDisplay.querySelector('.welcome-message');
+  if (welcome) {
+    welcome.classList.add('cascade-fade-out');
+    setTimeout(addMessagesToDisplay, 400);
+  } else {
+    addMessagesToDisplay();
+  }
+}
+
+async function executeHistoryRollback(targetIndex) {
+  isRollbackModeActive = false;
+  const targetMessageText = chatHistory[targetIndex] && chatHistory[targetIndex].content;
+  const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text:not(.welcome-message)') : [];
+
+  let maxAnimationDelay = 0;
+  for (let i = chatHistory.length - 1; i >= targetIndex; i--) {
+    if (bubbles[i]) {
+      const delayAmount = (chatHistory.length - 1 - i) * 80;
+      maxAnimationDelay = Math.max(maxAnimationDelay, delayAmount);
+      setTimeout(() => { bubbles[i].classList.add('cascade-fade-out'); }, delayAmount);
     }
   }
-  
-    async function executeHistoryRollback(targetIndex) {
-        isRollbackModeActive = false;
-        const targetMessageText = chatHistory[targetIndex] && chatHistory[targetIndex].content;
-        const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text:not(.welcome-message)') : [];
-        
-        let maxAnimationDelay = 0;
-        for (let i = chatHistory.length - 1; i >= targetIndex; i--) {
-            if (bubbles[i]) {
-                const delayAmount = (chatHistory.length - 1 - i) * 80;
-                maxAnimationDelay = Math.max(maxAnimationDelay, delayAmount);
-                setTimeout(() => { bubbles[i].classList.add('cascade-fade-out'); }, delayAmount);
-            }
-        }
-        
-        const totalAnimationTime = maxAnimationDelay + 400;
-        
-        chatHistory = chatHistory.slice(0, targetIndex); 
-        
-        try {
-            if (userInput) {
-                userInput.value = targetMessageText || "";
-                userInput.focus();
-            }
-            await animateToThinking();
-            
-            const response = await fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'branch', index: targetIndex })
-            });
-            if (!response.ok) throw new Error(response.statusText);
-            
-            await sleep(totalAnimationTime);
-            
-            renderHistory(); 
-            await animateBackToNormal();
-        } catch (err) {
-            await animateToError();
-            isRollbackModeActive = false;
-            renderHistory();
-        } finally {
-            if (userInput) userInput.placeholder = "Ожидание запроса...";
-        }
+
+  const totalAnimationTime = maxAnimationDelay + 400;
+  chatHistory = chatHistory.slice(0, targetIndex);
+
+  try {
+    if (userInput) {
+      userInput.value = targetMessageText || "";
+      userInput.focus();
     }
-  
-  async function clearAllChatMemory() {
-    togglePlusMenu();
-    if (!confirm("Внимание: стереть память андроида и начать новый чат?")) return;
-    
-    const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text') : [];
-    let maxDelay = 0;
-    
-    bubbles.forEach((bubble, index) => {
-      const delayAmount = index * 80;
-      maxDelay = Math.max(maxDelay, delayAmount);
-      setTimeout(() => { bubble.classList.add('cascade-fade-out'); }, delayAmount);
+    await animateToThinking();
+
+    const response = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'branch', 
+        index: targetIndex,
+        session_id: sessionID 
+      })
     });
 
-    try {
-      await animateToThinking();
-      const response = await fetch(BACKEND_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'clear' })
-      });
-      if (!response.ok) throw new Error(response.statusText);
-      
-      await sleep(maxDelay + 400);
-      
-      chatHistory = [];
+    if (!response.ok) throw new Error(response.statusText);
+
+    await sleep(totalAnimationTime);
+    renderHistory();
+    await animateBackToNormal();
+  } catch (err) {
+    await animateToError();
+    isRollbackModeActive = false;
+    renderHistory();
+  } finally {
+    if (userInput) userInput.placeholder = "Ожидание запроса...";
+  }
+}
+
+async function clearAllChatMemory() {
+  togglePlusMenu();
+  if (!confirm("Внимание: стереть память андроида и начать новый чат?")) return;
+
+  const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text') : [];
+  let maxDelay = 0;
+
+  bubbles.forEach((bubble, index) => {
+    const delayAmount = index * 80;
+    maxDelay = Math.max(maxDelay, delayAmount);
+    setTimeout(() => { bubble.classList.add('cascade-fade-out'); }, delayAmount);
+  });
+
+  try {
+    await animateToThinking();
+    const response = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'clear',
+        session_id: sessionID 
+      })
+    });
+
+    if (!response.ok) throw new Error(response.statusText);
+
+    await sleep(maxDelay + 400);
+
+    chatHistory = [];
+    renderHistory();
+    await animateBackToNormal();
+  } catch (err) {
+    await animateToError();
+  }
+}
+
+function enableRollbackMode() {
+  if (chatHistory.filter(msg => msg.role === 'user').length === 0) {
+    alert("История диалога пуста. Нечего редактировать!");
+    togglePlusMenu();
+    return;
+  }
+  isRollbackModeActive = true;
+  renderHistory();
+  togglePlusMenu();
+}
+
+async function sendMessage() {
+  if (isRollbackModeActive) isRollbackModeActive = false;
+  const text = userInput ? userInput.value.trim() : "";
+
+  const attachedFormats = [];
+  const container = document.getElementById('fileBadgeContainer');
+
+  const cubeStack = document.getElementById('cubeStack');
+  const cubes = document.querySelectorAll('#cubeStack .file-cube-geometry');
+
+  cubes.forEach(cube => {
+    if (cube.textContent) {
+      attachedFormats.push(cube.textContent.trim());
+    }
+  });
+
+  if (!text && attachedFormats.length === 0) return;
+
+  let finalPayloadMessage = text;
+  if (clientSideFileBuffer) {
+    finalPayloadMessage = `[Анализ данных ${attachedFormats.join(', ')}]:\n${clientSideFileBuffer}\n${text}`;
+  }
+
+  const formatsBackup = attachedFormats.length > 0 ? [...attachedFormats] : null;
+
+  chatHistory.push({
+    role: 'user',
+    content: text ? text : "",
+    fileFormats: formatsBackup
+  });
+
+  if (userInput) userInput.value = "";
+  renderHistory();
+
+  if (container) {
+    container.classList.add('file-pulse-launch');
+    await sleep(180);
+    if (cubeStack) cubeStack.innerHTML = "";
+    container.style.display = 'none';
+    container.classList.remove('file-pulse-launch');
+  }
+
+  await animateToThinking();
+
+  const slidingWindow = chatHistory.slice(Math.max(0, chatHistory.length - 15));
+  
+  try {
+    const response = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'chat', 
+        message: finalPayloadMessage, 
+        session_id: sessionID 
+      })
+    });
+
+    if (!response.ok) throw new Error(response.statusText);
+    const data = await response.json();
+    if (data && data.message) {
+      chatHistory.push({ role: 'assistant', content: data.message });
       renderHistory();
       await animateBackToNormal();
-    } catch (err) {
-      await animateToError();
+    } else {
+      throw new Error('No message in response');
     }
-  }
-
-  function enableRollbackMode() {
-    if (chatHistory.filter(msg => msg.role === 'user').length === 0) {
-      alert("История диалога пуста. Нечего редактировать");
-      togglePlusMenu();
-      return;
-    }
-    isRollbackModeActive = true;
+  } catch (err) {
+    await animateToError();
+    chatHistory.push({ role: 'assistant', content: '[Ошибка: сервер перегружен или недоступен]' });
     renderHistory();
-    togglePlusMenu();
+  } finally {
+    clientSideFileBuffer = "";
+    if (userInput) userInput.placeholder = "Ожидание запроса...";
+  }
+}
+
+function onFileChange() {
+  togglePlusMenu();
+  if (!fileInput) return;
+
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const cubeStack = document.getElementById('cubeStack');
+  const container = document.getElementById('fileBadgeContainer');
+  const attachIcon = document.getElementById('attachIcon');
+
+  if (cubeStack && cubeStack.children.length >= 3) {
+    alert("Превышен лимит: максимум 3 вложения в одну сессию отправки.");
+    fileInput.value = "";
+    return;
   }
 
-  async function sendMessage() {
-    if (isRollbackModeActive) isRollbackModeActive = false;
-    const text = userInput ? userInput.value.trim() : "";
-    
-    const attachedFormats = [];
-    const container = document.getElementById('fileBadgeContainer');
-    const cubeStack = document.getElementById('cubeStack');
-    const cubes = document.querySelectorAll('#cubeStack .file-cube-geometry');
-    
-    cubes.forEach(cube => {
-        if (cube.textContent) {
-            attachedFormats.push(cube.textContent.trim());
-        }
-    });
-    
-    if (!text && attachedFormats.length === 0) return;
-    
-    let finalPayloadMessage = text;
-		if (clientSideFileBuffer) {
-		    finalPayloadMessage = `[Анализ данных ${attachedFormats.join(', ')}]:\n${clientSideFileBuffer}\n${text}`;
-		}
- 
-    const formatsBackup = attachedFormats.length > 0 ? [...attachedFormats] : null;
-    
-    chatHistory.push({ 
-        role: 'user', 
-        content: text ? text : "", 
-        fileFormats: formatsBackup
-    });
-    
-    if (userInput) userInput.value = "";
-    
-    renderHistory(); 
-    
-    if (container) {
-        container.classList.add('file-pulse-launch');
-        await sleep(180); 
-        if (cubeStack) cubeStack.innerHTML = ""; 
-        container.style.display = 'none';
-        container.classList.remove('file-pulse-launch');
-    }
-    
-    await animateToThinking();
-    
-    const slidingWindow = chatHistory.slice(Math.max(0, chatHistory.length - 15));
+  const fileExtension = file.name.split('.').pop().toUpperCase();
+
+  if (attachIcon) attachIcon.className = "fa-solid fa-paperclip fa-spin";
+  if (userInput) userInput.placeholder = "Введите подпись...";
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
     try {
-        const response = await fetch(BACKEND_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'chat', message: finalPayloadMessage, history: slidingWindow })
-        });
-        if (!response.ok) throw new Error(response.statusText);
-        const data = await response.json();
-        if (data && data.message) {
-            chatHistory.push({ role: 'assistant', content: data.message });
-            renderHistory();
-            await animateBackToNormal();
-        } else {
-            throw new Error('No message in response');
-        }
-    } catch (err) {
-        await animateToError();
-        chatHistory.push({ role: 'assistant', content: '[Ошибка: сервер перегружен или недоступен]' });
-        renderHistory();
-    } finally {
-        clientSideFileBuffer = "";
-        if (userInput) userInput.placeholder = "Ожидание запроса...";
+      clientSideFileBuffer = `\n[Добавить подпись ${file.name}]:\n${e.target.result}`;
+
+      if (cubeStack && container) {
+        container.classList.remove('file-pulse-launch');
+
+        const newCube = document.createElement('div');
+        newCube.className = 'file-cube-geometry';
+        newCube.textContent = fileExtension;
+        cubeStack.appendChild(newCube);
+
+        container.style.display = 'flex';
+      }
+      if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
+    } catch (jsErr) {
+      console.error("Ошибка вёрстки кубов:", jsErr);
+      if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
+      if (userInput) userInput.placeholder = "Ошибка системы.";
     }
-}    
+  };
 
-    function onFileChange() {
-        togglePlusMenu();
-        if (!fileInput) return;
-        
-        const file = fileInput.files[0]; 
-        if (!file) return;
+  reader.onerror = () => {
+    if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
+    if (userInput) userInput.placeholder = "Ошибка системы.";
+  };
 
-        const cubeStack = document.getElementById('cubeStack');
-        const container = document.getElementById('fileBadgeContainer');
-        const attachIcon = document.getElementById('attachIcon');
-        
-        if (cubeStack && cubeStack.children.length >= 3) {
-            alert("Превышен лимит: максимум 3 вложения в одну сессию отправки.");
-            fileInput.value = "";
-            return;
-        }
+  reader.readAsText(file);
+  fileInput.value = "";
+}
 
-        const fileExtension = file.name.split('.').pop().toUpperCase();
-        
-        if (attachIcon) attachIcon.className = "fa-solid fa-spinner fa-spin";
-        if (userInput) userInput.placeholder = "Введите подпись..."; 
-        
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-            try {
-                clientSideFileBuffer = `\n[Добавить подпись ${file.name}]:\n${e.target.result}`;
-                
-                if (cubeStack && container) {
-                    container.classList.remove('file-pulse-launch');
-                    
-                    const newCube = document.createElement('div');
-                    newCube.className = 'file-cube-geometry';
-                    newCube.textContent = fileExtension;
-                    cubeStack.appendChild(newCube);
-                    
-                    container.style.display = 'flex';
-                }
-                if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
-            } catch (jsErr) {
-                console.error("Критический глитч вёрстки кубов:", jsErr);
-                if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
-                if (userInput) userInput.placeholder = "Ошибка системы.";
-            }
-        };
-        
-        reader.onerror = () => {
-		    if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
-		    if (userInput) userInput.placeholder = "Ошибка системы.";
-		};
-        
-        reader.readAsText(file);
-        fileInput.value = "";
-    }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>
