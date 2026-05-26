@@ -94,7 +94,6 @@ ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 ALLOWED_PDF_TYPES = {"application/pdf"}
 ALLOWED_DOMAINS = {
     "wikipedia.org", "ru.wikipedia.org",
-    "habr.com",
     "github.com"
 }
 
