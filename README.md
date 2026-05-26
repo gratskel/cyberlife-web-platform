@@ -1,40 +1,45 @@
-# CyberLife Connor RK800 - Async Predictive Fullstack Web Platform [STATUS: RELEASE v2.0 READY]
+# CyberLife Connor RK800 - Async Predictive Multimodal Platform [STATUS: RELEASE v3.0 READY]
 
-An advanced, production-ready asynchronous fullstack web terminal built on the `FastAPI` framework and secured via `Nginx Reverse Proxy`. The platform simulates the deterministic protocol of the RK800 'Connor' android, serving as an automated business intelligence terminal, document automation assistant, and DevOps utility core.
-
----
-
-## CURRENT ARCHITECTURAL STATUS
-
-* **Universal API Routing Proxy (`[DONE] Universal proxy_pass`):** Implements a unified, scalable reverse proxy structure over a secure service port (`2053`). Nginx dynamically routes complex REST actions seamlessly into the local loopback process running inside memory without CORS blockages.
-* **Deterministic LLM Context Control (`[DONE] Context Protection`):** Utilizes `asyncio.Semaphore` management to safely govern concurrent LLM completions, throttling peak traffic and optimizing token consumption under high load via customized model layer (`openai/gpt-oss-120b`).
-* **Adaptive Multi-Format UI Layer (`[DONE] Multi-Attachment Vector Dock`):** Renders a compact, step-darkened 3D parallel block cascade outside the chat message boundaries. Handles real-time input asset rendering with automatic `flex-shrink: 0` protection and custom file format token clipping.
-* **Advanced Chat Mutation Architecture (`[DONE] State Branching Engine`):** 
-  * *Context Tree Branching Mode:* Real-time mutation of any past user prompt node to instantly fork the conversation timeline and re-trigger synchronized AI responses without context state corruption.
-  * *Atomic Memory Purge:* Dedicated asynchronous backend endpoints to dynamically wipe and purge structural chat message history nodes entirely from memory log buffers.
-* **Rigid Exception Handling & Isolation:** Nested `try-catch-finally` JavaScript blocks ensure absolute client-side state resilience. Runtime errors are safely trapped and serialized, keeping the interface robust under load.
+An advanced, production-grade asynchronous fullstack web platform built on the `FastAPI` framework and engineered for high-throughput multi-modal inference operations. The platform embodies the deterministic protocol architecture of the RK800 'Connor' android, functioning as an intelligent runtime auditor, real-time web crawler, and architectural analyzer driven by a custom-engineered memory hierarchy.
 
 ---
 
-## HARDWARE INTEGRATION & PIPELINE PROGRESS
+## CURRENT ARCHITECTURAL STATUS & CORE CAPABILITIES
 
-* **Source Code Static Analysis (`.py`, `.js`, `.html`, `.css`):** Acts as an intelligent runtime code auditor. The core LLM engine inspects software syntax, highlights architectural bottlenecks, and alerts the operator to potential thread-safety anomalies and race conditions (`State Desynchronization`).
-* **Low-Level Log Parsing (`.txt`, `.log`, `.csv`, `.conf`):** Seamlessly digests raw system logs, proxy crash streams (e.g., `net::ERR_CONNECTION_ABORTED`), and structured exceptions (`json.JSONDecodeError`), outputting high-fidelity structural diagnostics within 4ms response times under strict token-bucket isolation rules.
-* **Binary Document & Vision Pipeline (`[IN PROGRESS]`):** The frontend adaptive layout framework is 100% completed and deployed to live production. The backend pipelines are currently scaling to handle single-pass PDF-to-JSON structural transformation, extracting textual layers and compiling autonomous multi-modal AI visual logging descriptions for embedded image matrices.
+*   **On-Demand Lazy Context Footprint Hydration Core (DONE - Lazy Loading):** A proprietary contextual architecture designed to eliminate prompt token bloat and minimize system memory overhead. Rather than continuously injecting megabytes of raw source code through the active LLM context window, the async backend stores lightweight file footprints in persistent `sessions_storage` logs. Upon detecting execution triggers, the runtime extracts complete source files directly from disk buffers and dynamically enriches Connor's prompt context stream before model inference.
+
+*   **Universal Web Scraping & URL Crawling Core (DONE - Link Parsing & HTTP/2 Curl Spoofing):** Fully asynchronous web extraction framework powered by `BeautifulSoup4` and `httpx`. Engineered with native `HTTP/2` protocol support and low-level CLI context spoofing (`User-Agent: curl/8.4.0`), seamlessly bypassing aggressive Cloudflare/Nginx anti-scraping WAF challenges on production documentation nodes. Connor natively detects incoming links within active chat streams, cleans HTML source layers, and extracts structured semantic content on-the-fly with single-pass validation under `verify=True` SSL handshakes.
+
+*   **Raw Multipart FormData Ingestion Pipeline (DONE - Multimodal Shift):** Eliminates client-side buffering overhead through reactive binary stream ingestion. Heavy multi-modal assets flow directly from the UI as raw binary payloads using reactive multi-stream array parameters (`List[UploadFile]`).
+
+*   **Advanced Chat Mutation Architecture (DONE - State Branching Engine):** 
+    *   *Context Tree Branching Mode:* Real-time mutation of any past conversation node to fork parallel conversation timelines and re-trigger synchronized AI responses without state corruption.
+    *   *Atomic Memory Purge:* Dedicated asynchronous backend endpoints to dynamically wipe structural chat message history nodes entirely from memory buffers.
+
+*   **Deterministic LLM Context Control (DONE - Context Protection):** Utilizes `asyncio.Semaphore` management to safely govern concurrent LLM completions, throttling peak traffic and optimizing token consumption under high load via customized model layer (openai/gpt-oss-120b).
+
+*   **Rigid Exception Handling & Isolation:** Nested try-catch-finally blocks ensure absolute client-side state resilience. Runtime errors are safely trapped and serialized, maintaining interface stability under peak load conditions.
 
 ---
 
-## AGENT ROADMAP & FEATURE PIPELINE (PLANNED)
+## HARDWARE INTEGRATION & MULTI-MODAL CONVEYOR
 
-### 1. Live Web Scraping Core
-* **URL Analysis Engine:** Implementation of an HTTP parsing layer (via `BeautifulSoup4` and `httpx`) allowing Connor to directly crawl external web links, extract structured text content, and summarize remote documentation arrays.
+*   **Binary Document Processing (DONE - Asset Hydration):** Backend pipelines handle single-pass PDF transformations via `PyMuPDF` (`fitz`), extracting raw text layers and converting layout buffers seamlessly into structured semantic units.
 
-### 2. Smart Infrastructure Plan (From Corporate Blueprint)
-* **AI Data Engineering Component:** Natural language-to-SQL automated compiler. Translates raw business queries like *"Extract all contractors from Moscow with debt over 50k"* into raw `SELECT` database sequences.
-* **System Health Monitor (DevOps Utility):** Direct backend system access allowing operators to execute diagnostic sequences to retrieve live CPU, memory consumption, and Nginx traffic metrics formatted in clean Markdown tables.
+*   **High-Throughput Vision & OCR Core (DONE - Pixel Extraction):** Hardware-accelerated `pytesseract` engines extract text grids directly from image frames and runtime screenshots, compiling visual analytics for embedded image matrices.
+
+*   **Source Code Static Analysis (.py, .js, .html, .css):** Intelligent runtime code auditor that inspects software syntax, highlights architectural bottlenecks, and alerts operators to potential thread-safety anomalies and race conditions.
+
+*   **Low-Level Log Parsing (.txt, .log, .csv, .conf):** Seamlessly digests raw system logs, proxy crash streams (e.g., `net::ERR_CONNECTION_ABORTED`), and structured exceptions (`json.JSONDecodeError`), outputting high-fidelity structural diagnostics.
 
 ---
 
-## DEPLOYMENT ARCHITECTURE
-* `Port 443` — Entry HTTPS endpoint secured via Let's Encrypt SSL certificates.
-* `Port 2053` — Dedicated secure API static service channel processing structural asynchronous POST JSON packets.
+## DEPLOYMENT ARCHITECTURE (THREE-TIER PORT MATRIX)
+
+The platform infrastructure isolates core operational layers through a sandboxed multi-port network layout to enforce secure local packet routing:
+
+*   **Port 443 (External Web UI Shroud):** High-level entry endpoint accepting public client connections, secured via automated Let's Encrypt SSL/TLS handshakes and serving the client-side UI frame.
+
+*   **Port 2053 (External API Static Service Gate):** Dedicated secure proxy tunnel routing incoming asynchronous multimodal multipart FormData packets directly into Nginx ingestion layers.
+
+*   **Port 8000 (Internal ASGI Loopback Core):** The isolated local engine port running the core asynchronous `FastAPI` instance via `Uvicorn`. Sandboxed within `127.0.0.1`, this port remains hidden from direct external web access, communicating strictly via internal Nginx `proxy_pass` lookups.

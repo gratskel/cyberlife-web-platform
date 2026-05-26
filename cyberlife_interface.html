@@ -7,129 +7,145 @@
     <link id="cyberFavicon" rel="icon" type="image/png" href="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&amp;display=swap">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+<style>
+        /* ========== БАЗОВЫЕ СТИЛИ ========== */
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-		html, body {
-		    height: 100%;
-		    margin: 0;
-		    padding: 0;
-		    overflow: hidden;
-		}
-		
-		body { 
-		    background: #020408;
-		    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-		    color: #e2e8f0; 
-		    display: flex; 
-		    justify-content: center; 
-		    align-items: center; 
-		}
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background: #020408;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ========== ФОН И МАТРИЦА ========== */
         
         .detroit-matrix {
-            position: absolute; 
-            width: 100%; 
+            position: absolute;
+            width: 100%;
             height: 100%;
             background: linear-gradient(rgba(2,4,10,0.4), rgba(2,4,10,0.65)),
-            url('https://shared.steamstatic.com/community_assets/images/items/1222140/c70ab15245f0cf56b8d0da1929b178259e5bbad3.jpg') no-repeat center center;
+                        url('https://shared.steamstatic.com/community_assets/images/items/1222140/c70ab15245f0cf56b8d0da1929b178259e5bbad3.jpg') no-repeat center center;
             background-size: cover;
             filter: grayscale(15%) contrast(110%) blur(4px);
             transform: scale(1.02);
             z-index: 1;
         }
 
+        /* ========== ОСНОВНЫЕ КОНТЕЙНЕРЫ ========== */
+        
         .interface-container {
-            position: relative; 
-            width: 100%; 
+            position: relative;
+            width: 100%;
             height: 100%;
-            display: flex; 
+            display: flex;
             justify-content: center;
-            align-items: center; 
+            align-items: center;
             z-index: 2;
             padding: 15px;
         }
 
         .cyber-panel {
-            width: 100%; 
-            max-width: 650px; 
+            width: 100%;
+            max-width: 650px;
             height: 85vh;
             max-height: 600px;
-            background: rgba(6, 10, 20, 0.8); 
-            backdrop-filter: blur(24px); 
+            background: rgba(6, 10, 20, 0.8);
+            backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(56, 189, 248, 0.14); 
+            border: 1px solid rgba(56, 189, 248, 0.14);
             border-radius: 16px;
             box-shadow: 0 0 24px rgba(0, 191, 255, 0.06), inset 0 0 16px rgba(56, 189, 248, 0.02);
-            padding: 24px; 
-            display: flex; 
-            flex-direction: column; 
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
             justify-content: space-between;
             transition: all 0.3s ease-in-out;
         }
+
+        /* ========== МЕДИА ДЛЯ ДРУГИХ ДИСПЛЕЕВ ========== */
         
-		@media (max-height: 740px) {
-		    .chat-container {
-		        padding: 10px;
-		    }
-		    
-		    .ai-text {
-		        font-size: 14px;
-		        padding: 10px 14px;
-		    }
-		    
-		    .input-container {
-		        padding: 8px 12px;
-		        margin-top: 5px;
-		    }
-		}
-		
-		
-		@media (min-width: 768px) and (max-height: 900px) {
-		    .chat-container {
-		        max-width: 600px;
-		        margin: 0 auto;
-		        height: 92vh;
-		        margin-top: 4vh;
-		        border-radius: 16px;
-		    }
-		}
-		
-		@media (min-width: 1024px) {
-		    .cyber-panel {
-		        max-width: 900px; 
-		        height: 75vh;
-		        max-height: 700px;
-		        padding: 30px;
-		        margin: 0 auto; 
-		    }
-		    
-		    .chat-display { 
-		        font-size: 16px; 
-		    }
-		}
+        @media (max-height: 740px) {
+            .chat-container {
+                padding: 10px;
+            }
+
+            .ai-text {
+                font-size: 14px;
+                padding: 10px 14px;
+            }
+
+            .input-container {
+                padding: 8px 12px;
+                margin-top: 5px;
+            }
+        }
+
+        @media (min-width: 768px) and (max-height: 900px) {
+            .chat-container {
+                max-width: 600px;
+                margin: 0 auto;
+                height: 92vh;
+                margin-top: 4vh;
+                border-radius: 16px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .cyber-panel {
+                max-width: 900px;
+                height: 75vh;
+                max-height: 700px;
+                padding: 30px;
+                margin: 0 auto;
+            }
+
+            .chat-display {
+                font-size: 16px;
+            }
+        }
+
+        /* ========== ЗАГОЛОВОК ПАНЕЛИ ========== */
         
         .panel-header {
             position: relative;
-            display: flex; 
-            justify-content: space-between; 
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(56, 189, 248, 0.15); 
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15);
             padding-bottom: 15px;
             flex-shrink: 0;
             width: 100%;
         }
+
         .panel-header-block {
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
-        .model-status { 
-            color: #38bdf8; 
-            font-size: 13px; 
-            font-weight: 600; 
-            letter-spacing: 2px; 
-            text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); 
+
+        .model-status {
+            color: #38bdf8;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
         }
+
         .author-status {
             color: rgba(56, 189, 248, 0.35);
             font-size: 10px;
@@ -137,15 +153,17 @@
             letter-spacing: 1.5px;
             text-transform: uppercase;
         }
-        
+
+        /* ========== ДИОД КОННОРА ========== */
+           
         .connor-led-container {
-            width: 26px; 
+            width: 26px;
             height: 26px;
-            position: absolute; 
+            position: absolute;
             right: 0px;
             flex-shrink: 0;
         }
-        
+
         .led-layer {
             position: absolute;
             width: 26px;
@@ -156,10 +174,10 @@
             opacity: 0;
             transform: rotate(-120deg);
             mix-blend-mode: normal;
-            filter: drop-shadow(0 0 6px rgba(56,189,248,0.6));
+            filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
             outline: none;
             border: none;
-            transition: opacity 0.45s ease-in-out, filter 0.45s ease-in-out, transform 0.6s cubic-bezier(0.25,1,0.5,1);
+            transition: opacity 0.45s ease-in-out, filter 0.45s ease-in-out, transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .led-layer.active {
@@ -191,42 +209,45 @@
             background-image: url('https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/1222140/956fb74d8b8801a2761c8dc8559d316e3556a97b.png');
             filter: drop-shadow(0 0 10px rgba(239,68,68,0.8));
         }
-        
+
+        /* Анимации дыхания LED */
         @keyframes led-breathe-blue {
-            0%, 100% { filter: drop-shadow(0 0 4px rgba(56,189,248,0.4)); opacity: 0.85; }
-            50% { filter: drop-shadow(0 0 10px rgba(56,189,248,0.8)); opacity: 1; }
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.4)); opacity: 0.85; }
+            50% { filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.8)); opacity: 1; }
         }
 
         @keyframes led-breathe-yellow {
-            0%, 100% { filter: drop-shadow(0 0 5px rgba(245,158,11,0.42)); opacity: 0.8; }
-            50% { filter: drop-shadow(0 0 12px rgba(245,158,11,0.85)); opacity: 1; }
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.42)); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.85)); opacity: 1; }
         }
 
         @keyframes led-breathe-red {
-            0%, 100% { filter: drop-shadow(0 0 4px rgba(239,68,68,0.45)); opacity: 0.75; }
-            50% { filter: drop-shadow(0 0 15px rgba(239,68,68,0.98)); opacity: 1; }
+            0%, 100% { filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.45)); opacity: 0.75; }
+            50% { filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.98)); opacity: 1; }
         }
 
-        .chat-display { 
-            flex: 1; 
-            padding: 20px 0px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
+        /* ========== ОБЛАСТЬ ЧАТА ========== */
+        
+        .chat-display {
+            flex: 1;
+            padding: 20px 0px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             box-sizing: border-box;
         }
-        
-        .ai-text { 
-            font-size: 13px; 
-            line-height: 1.6; 
-            color: #cbd5e1; 
+
+        .ai-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #cbd5e1;
             background: transparent;
-            padding: 10px 12px; 
+            padding: 10px 12px;
             border: 1px solid rgba(56, 189, 248, 0.15);
             border-radius: 8px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            width: fit-content; 
-            max-width: 90%; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            width: fit-content;
+            max-width: 90%;
             position: relative;
             -webkit-tap-highlight-color: transparent;
             margin-bottom: 10px;
@@ -235,189 +256,201 @@
         .ai-text.connor-bubble {
             align-self: flex-start;
             background: transparent;
-            border: 1px solid rgba(56,189,248,0.15);
+            border: 1px solid rgba(56, 189, 248, 0.15);
             border-bottom-left-radius: 2px;
         }
-        .ai-text.connor-bubble.file-reply-gap {
-            margin-top: 24px;
+
+        .ai-text.operator-bubble.file-reply-gap {
+            margin-bottom: 32px;
         }
+
         .ai-text.operator-bubble {
-            min-width: 140px block; 
+            min-width: 140px block;
             max-width: 75%;
-            padding: 12px 16px;
+            padding: 10px 12px;
             display: inline-block;
             align-self: flex-end;
             background: transparent;
-            border: 1px solid rgba(56,189,248,0.15);
+            border: 1px solid rgba(56, 189, 248, 0.15);
             border-bottom-right-radius: 2px;
         }
 
-        .ai-text.selectable-user-msg { 
-            cursor: pointer; 
-            border-color: #38bdf8; 
-            box-shadow: 0 0 12px rgba(56,189,248,0.3), inset 0 0 6px rgba(56, 189, 248, 0.25);  
+        .ai-text.selectable-user-msg {
+            cursor: pointer;
+            border-color: #38bdf8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3), inset 0 0 6px rgba(56, 189, 248, 0.25);
         }
-        .ai-text.selectable-user-msg:active { 
+
+        .ai-text.selectable-user-msg:active {
             transition: none;
             background: rgba(56, 189, 248, 0.12);
             border: 1px solid #38bdf8;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.55); inset 0 0 10px rgba(56, 189, 248, 0.25); 
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.55), inset 0 0 10px rgba(56, 189, 248, 0.25);
         }
 
-        .input-area { 
-            display: flex; 
-            gap: 12px; 
-            border-top: 1px solid rgba(56, 189, 248, 0.1); 
-            padding-top: 15px; 
+        /* ========== ОБЛАСТЬ ВВОДА ========== */
+        
+        .input-area {
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid rgba(56, 189, 248, 0.1);
+            padding-top: 15px;
             flex-shrink: 0;
-            align-items: center; 
+            align-items: center;
         }
-        
-        .input-wrapper { 
-            flex: 1; 
-            position: relative; 
-            display: flex; 
-            align-items: center; 
-            background: transparent; 
-            border: 1px solid rgba(56, 189, 248, 0.15); 
-            border-radius: 8px; 
-            transition: border-color 0.2s; 
-        }
-        .input-wrapper:focus-within { 
-            border-color: #38bdf8; 
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.15); 
-        }
-        
-        #userInput { 
-            width: 90%; 
-            background: transparent; 
-            border: none; 
-            outline: none; 
-            padding: 14px 15px 14px 55px;
-            color: #f8fafc; 
-            -webkit-appearance: none; 
-            appearance: none; 
-            font-size: 14px; 
-        }
-        
-        .plus-dropdown-menu { 
-            display: flex; 
-            gap: 15px; 
-            background: rgba(6, 10, 20, 0.8); 
-            backdrop-filter: blur(24px); 
-            -webkit-backdrop-filter: blur(24px); 
-            border: 1px solid rgba(56, 189, 248, 0.2); 
-            padding: 10px 15px; 
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: transparent;
+            border: 1px solid rgba(56, 189, 248, 0.15);
             border-radius: 8px;
-            position: absolute; 
-            bottom: 75px; 
-            left: 20px; 
-            opacity: 0; 
-            transform: translateY(10px); 
-            pointer-events: none; 
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
-            z-index: 100; 
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); 
+            transition: border-color 0.2s;
         }
-        .plus-dropdown-menu.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        
-        .menu-icon-btn { 
-            color: rgba(56, 189, 248, 0.5); 
-            cursor: pointer; 
-            font-size: 14px; 
+
+        .input-wrapper:focus-within {
+            border-color: #38bdf8;
+        }
+
+        #userInput {
+            width: 90%;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 14px 15px 14px 55px;
+            color: #f8fafc;
+            -webkit-appearance: none;
+            appearance: none;
+            font-size: 14px;
+        }
+
+        /* Выпадающее меню */
+        .plus-dropdown-menu {
+            display: flex;
+            gap: 15px;
+            background: rgba(6, 10, 20, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            position: absolute;
+            bottom: 75px;
+            left: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .plus-dropdown-menu.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .menu-icon-btn {
+            color: rgba(56, 189, 248, 0.5);
+            cursor: pointer;
+            font-size: 14px;
             transition: color 0.2s, transform 0.2s;
-            width: 24px; 
-            height: 24px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .menu-icon-btn:hover { color: #38bdf8; transform: scale(1.1); -webkit-tap-highlight-color: transparent; }
-        .menu-icon-btn.danger-btn:hover { color: #ef4444; -webkit-tap-highlight-color: transparent; }
-        .controls-row { display: flex; gap: 10px; width: 100%; align-items: center; }
-        
-        .plus-toggle-label { 
-            position: absolute; 
-            left: 12px; 
-            cursor: pointer; 
-            color: rgba(56, 189, 248, 0.4); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            transition: all 0.25s ease; 
-            width: 24px; 
-            height: 24px; 
-            background: transparent; 
-            -webkit-tap-highlight-color: transparent; 
+
+        .menu-icon-btn:hover {
+            color: #38bdf8;
+            transform: scale(1.1);
+            -webkit-tap-highlight-color: transparent;
         }
-        .plus-toggle-label.rotated { transform: rotate(135deg); color: #ef4444; background: transparent; }
+
+        .menu-icon-btn.danger-btn:hover {
+            color: #ef4444;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* ========== ПЛЮС И ОСТАЛЬНЫЕ ФУНКЦИИ ========== */
         
-        #sendBtn { 
-            position: absolute; 
+        .plus-toggle-label {
+            position: absolute;
+            left: 12px;
+            cursor: pointer;
+            color: rgba(56, 189, 248, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .plus-toggle-label.rotated {
+            transform: rotate(135deg);
+            color: #ef4444;
+            background: transparent;
+        }
+
+        #sendBtn {
+            position: absolute;
             right: 0px;
             background: transparent;
             border: none;
             color: rgba(56, 189, 248, 0.4);
-            cursor: pointer; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             transition: all 0.25s ease;
             padding: 0 8px;
             width: 47px;
             height: 47px;
             font-size: 15px;
-            z-index: 100; 
+            z-index: 100;
             -webkit-tap-highlight-color: transparent;
         }
-        #sendBtn:active { 
-            color: #38bdf8; 
-            transform: scale(1.15); 
-            text-shadow: 0 0 8px rgba(56, 189, 248, 0.6); 
-            background: transparent; 
+
+        #sendBtn:active {
+            color: #38bdf8;
+            transform: scale(1.15);
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+            background: transparent;
         }
+
+        /* ========== АНИМАЦИЯ ЗАТУХАНИЯ ========== */
         
         .ai-text.cascade-fade-out {
             animation: cyber-fade-out 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
             pointer-events: none;
         }
-           
-        .chat-display { 
-            flex: 1; 
-            padding: 20px 0px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
+
+        @keyframes cyber-fade-out {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
         }
+
+        /* ========== ИКОНКИ ФАЙЛОВ ========== */
         
-        .ai-text { 
-            font-size: 13px; 
-            line-height: 1.6; 
-            color: #cbd5e1; 
-            background: transparent;
-            padding: 10px 12px; 
-            border: 1px solid rgba(56, 189, 248, 0.15);
-            border-radius: 8px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            position: relative;
-            width: fit-content; 
-            max-width: 90%; 
-            position: relative;
-            -webkit-tap-highlight-color: transparent !important;
-            margin-bottom: 10px;
-        }
-
-        .ai-text.connor-bubble { align-self: flex-start; border-bottom-left-radius: 2px; }
-        .ai-text.connor-bubble.file-reply-gap { margin-bottom: 12px; }
-        .ai-text.operator-bubble { align-self: flex-end; border-bottom-right-radius: 2px; }
-        .ai-text.operator-bubble + .ai-text.connor-bubble.file-reply-gap { margin-top: 22px !important; }
-
-        .ai-text.selectable-user-msg { 
-            cursor: pointer; 
-            border-color: #38bdf8; 
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3), inset 0 0 6px rgba(56, 189, 248, 0.1);  
-        }
-
         .file-badge-container {
             display: none;
             align-items: center;
@@ -454,7 +487,7 @@
             box-shadow: 0 4px 10px rgba(56, 189, 248, 0.2);
             transition: all 0.2s ease;
             margin-left: 0;
-            transform: rotate(-4deg); 
+            transform: rotate(-4deg);
             z-index: 1;
         }
 
@@ -464,6 +497,7 @@
             box-shadow: -5px 0 10px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(56, 189, 248, 0.2);
             z-index: 2;
         }
+
         .file-cube-geometry:nth-child(3) {
             transform: rotate(-4deg);
             box-shadow: -5px 0 10px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(56, 189, 248, 0.2);
@@ -480,38 +514,48 @@
             transition: color 0.2s, transform 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
-        .file-cascade-close:hover { color: #f87171; transform: scale(1.15); }
+
+        .file-cascade-close:hover {
+            color: #f87171;
+            transform: scale(1.15);
+        }
 
         .file-badge-container.file-pulse-launch {
             animation: cyber-puf-cascade 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
         }
-        
+
         @keyframes cyber-puf-cascade {
-            0% { 
-                transform: scale(1) translateY(0); 
-                opacity: 1 !important; 
-                filter: blur(0px); 
+            0% {
+                transform: scale(1) translateY(0);
+                opacity: 1 !important;
+                filter: blur(0px);
             }
-            50% { 
-                transform: scale(1.05) translateY(-10px); 
-                filter: blur(1px); 
-                box-shadow: 0 0 15px rgba(56, 189, 248, 0.4) !important; 
+            50% {
+                transform: scale(1.05) translateY(-10px);
+                filter: blur(1px);
+                box-shadow: 0 0 15px rgba(56, 189, 248, 0.4) !important;
             }
-            100% { 
+            100% {
                 transform: scale(0.5) scaleY(0) translateY(-30px);
-                opacity: 0 !important; 
-                filter: blur(4px); 
+                opacity: 0 !important;
+                filter: blur(4px);
+                margin-bottom: -45px;
+                padding: 0 14px;
+                border-top-width: 0;
+                border-bottom-width: 0;
             }
         }
 
+        /* ========== ИКОНКИ ФАЙЛОВ У ПУЗЫРЬКА ========== */
+        
         .inner-bubble-file-wrapper {
             display: flex;
             gap: 5px;
             justify-content: flex-end;
             width: auto;
             position: absolute;
-            bottom: -23px;
-            right: 12px; 
+            bottom: -25px;
+            right: 12px;
             z-index: 99;
         }
 
@@ -523,7 +567,7 @@
             min-width: 32px;
             height: 32px;
             flex-shrink: 0;
-            background: #38bdf8; 
+            background: #38bdf8;
             border: none;
             border-radius: 6px;
             color: #020408;
@@ -538,7 +582,7 @@
             box-shadow: 0 4px 10px rgba(56, 189, 248, 0.2);
             z-index: 1;
         }
-        
+
         .inner-bubble-file-badge:not(:first-child) {
             margin-left: -14px;
             background: #38bdf8;
@@ -553,67 +597,61 @@
             box-shadow: -5px 0 10px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(56, 189, 248, 0.2);
             z-index: 3;
         }
-        
+
         @keyframes cyber-fade-out {
             0% {
                 opacity: 1;
-                transform: translateY(0) scale(1);
-                filter: blur(0px) drop-shadow(0 0 4px rgba(56, 189, 248, 0.15));
             }
             50% {
                 filter: blur(2px) drop-shadow(0 0 8px rgba(56, 189, 248, 0.3));
             }
             100% {
                 opacity: 0;
-                transform: translateY(-20px) scale(0.92);
-                filter: blur(5px);
-                margin-bottom: -45px;
-                padding: 0 14px;
-                border-top-width: 0;
-                border-bottom-width: 0;
+                transform: translateY(-20px) scale(1);
+                filter: blur(0px) drop-shadow(0 0 4px rgba(56, 189, 248, 0.15));
             }
         }
-        
-    </style>
+
+</style>
 </head>
 <body>
 
-    <div class="detroit-matrix"></div>
-    <div class="interface-container">
-        <div class="cyber-panel">
-            <div class="panel-header">
-                <div class="panel-header-block">
-                    <span class="model-status">CYBERLIFE SYSTEMS</span>
-                    <span class="author-status">made by gratskel</span>
+<div class="detroit-matrix"></div>
+<div class="interface-container">
+    <div class="cyber-panel">
+        <div class="panel-header">
+            <div class="panel-header-block">
+                <span class="model-status">CYBERLIFE SYSTEMS</span>
+                <span class="author-status">made by gratskel</span>
+            </div>
+            <div class="connor-led-container">
+                <div id="ledBlue" class="led-layer blue active"></div>
+                <div id="ledBlueYellow" class="led-layer blue-yellow"></div>
+                <div id="ledYellow" class="led-layer yellow"></div>
+                <div id="ledYellowRed" class="led-layer yellow-red"></div>
+                <div id="ledRed" class="led-layer red"></div>
+            </div>
+        </div>
+        <div class="chat-display"></div>
+        <div class="input-area">
+            <div class="plus-dropdown-menu" id="plusMenu">
+                <label for="fileInput" class="menu-icon-btn" title="Прикрепить файл">
+                    <i class="fa-solid fa-paperclip"></i>
+                </label>
+                <div class="menu-icon-btn" title="Редактировать старый запрос" onclick="enableRollbackMode()">
+                    <i class="fa-solid fa-pen"></i>
                 </div>
-                <div class="connor-led-container">
-                    <div id="ledBlue" class="led-layer blue active"></div>
-                    <div id="ledBlueYellow" class="led-layer blue-yellow"></div>
-                    <div id="ledYellow" class="led-layer yellow"></div>
-                    <div id="ledYellowRed" class="led-layer yellow-red"></div>
-                    <div id="ledRed" class="led-layer red"></div>
+                <div class="menu-icon-btn danger-btn" title="Очистить память андроида" onclick="clearAllChatMemory()">
+                    <i class="fa-solid fa-trash-can"></i>
                 </div>
             </div>
-            <div class="chat-display"></div>
-            <div class="input-area">
-                <div class="plus-dropdown-menu" id="plusMenu">
-                    <label for="fileInput" class="menu-icon-btn" title="Прикрепить файл">
-                        <i class="fa-solid fa-paperclip"></i>
-                    </label>
-                    <div class="menu-icon-btn" title="Редактировать старый запрос" onclick="enableRollbackMode()">
-                        <i class="fa-solid fa-pen"></i>
-                    </div>
-                    <div class="menu-icon-btn danger-btn" title="Очистить память андроида" onclick="clearAllChatMemory()">
-                        <i class="fa-solid fa-trash-can"></i>
+            <div style="display: flex; flex-direction: column; width: 100%; position: relative;">
+                <div id="fileBadgeContainer" class="file-badge-container">
+                    <div id="cubeStack"></div>
+                    <div class="file-cascade-close" onclick="document.getElementById('fileBadgeContainer').style.display='none'; document.getElementById('cubeStack').innerHTML=''; const fi=document.getElementById('fileInput'); if(fi){fi.value='';} if(typeof userInput !== 'undefined') userInput.placeholder='Введите сообщение...';">
+                        <i class="fa-solid fa-xmark"></i>
                     </div>
                 </div>
-                <div style="display: flex; flex-direction: column; width: 100%; position: relative;">
-                    <div id="fileBadgeContainer" class="file-badge-container">
-                        <div id="cubeStack"></div>
-                        <div class="file-cascade-close" onclick="cancelFileAttachment()">
-                            <i class="fa-solid fa-xmark"></i>
-                        </div>
-                    </div>
                 <div class="controls-row">
                     <div class="input-wrapper">
                         <div class="plus-toggle-label" id="plusBtn" onclick="togglePlusMenu()">
@@ -630,56 +668,59 @@
 </div>
 
 <script>
-  "use strict";
+"use strict";
+
 const BACKEND_URL = '/api/connor/chat';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 let chatHistory = [];
 let isRollbackModeActive = false;
-let clientSideFileBuffer = "";
-let sessionID = null; // Будет инициализирован в init()
+let sessionID = null;
 
 // DOM элементы
 let chatDisplay, userInput, plusMenu, plusBtn, fileInput;
 
 function initSessionID() {
-  sessionID = localStorage.getItem('cyberlife_session_id');
-  if (!sessionID) {
-    // Криптографический случайный ключ из миллиарда комбинаций Math.random
-    sessionID = 'gratskel_id_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-    localStorage.setItem('cyberlife_session_id', sessionID);
-  }
+    sessionID = localStorage.getItem('cyberlife_session_id');
+    if (!sessionID) {
+        sessionID = 'gratskel_id_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+        localStorage.setItem('cyberlife_session_id', sessionID);
+    }
 }
-
 function init() {
-  initSessionID();
-  chatDisplay = document.querySelector('.chat-display');
-  userInput = document.getElementById('userInput');
-  plusMenu = document.getElementById('plusMenu');
-  plusBtn = document.getElementById('plusBtn');
-  fileInput = document.getElementById('fileInput');
-
-  if (fileInput) fileInput.addEventListener('change', onFileChange);
-  if (userInput) userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
-  renderHistory();
+    initSessionID();
+    
+    chatDisplay = document.querySelector('.chat-display');
+    userInput = document.getElementById('userInput');
+    plusMenu = document.getElementById('plusMenu');
+    plusBtn = document.getElementById('plusBtn');
+    fileInput = document.getElementById('fileInput');
+    
+    if (fileInput) fileInput.addEventListener('change', onFileChange);
+    if (userInput) {
+        userInput.addEventListener('keydown', (e) => { 
+            if (e.key === 'Enter') sendMessage(); 
+        });
+    }
+    renderHistory();
 }
 
 function togglePlusMenu() {
-  if (!plusMenu || !plusBtn) return;
-  plusMenu.classList.toggle('active');
-  plusBtn.classList.toggle('rotated');
+    if (!plusMenu || !plusBtn) return;
+    plusMenu.classList.toggle('active');
+    plusBtn.classList.toggle('rotated');
 }
 
 function forceLedLayer(activeId) {
     ['ledBlue', 'ledBlueYellow', 'ledYellow', 'ledYellowRed', 'ledRed'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('active');
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
     });
     const activeEl = document.getElementById(activeId);
     if (activeEl) activeEl.classList.add('active');
-  }
+}
 
-  function changeFavicon(state) {
+function changeFavicon(state) {
     const favicon = document.getElementById('cyberFavicon');
     if (!favicon) return;
     if (state === 'thinking') {
@@ -689,332 +730,340 @@ function forceLedLayer(activeId) {
     } else {
       favicon.href = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/items/1222140/b7d179a060c845cd128f6c2852faa3badad353be.png';
     }
-  }
+}
 
-  async function animateToThinking() { changeFavicon('thinking'); forceLedLayer('ledBlueYellow'); await sleep(400); forceLedLayer('ledYellow'); }
-  async function animateBackToNormal() { changeFavicon('blue'); forceLedLayer('ledBlueYellow'); await sleep(400); forceLedLayer('ledBlue'); }
-  async function animateToError() { changeFavicon('error'); forceLedLayer('ledYellowRed'); await sleep(400); forceLedLayer('ledRed'); }
+async function animateToThinking() { 
+    changeFavicon('thinking'); 
+    forceLedLayer('ledBlueYellow'); 
+    await sleep(400);
+    forceLedLayer('ledYellow'); 
+}
+
+async function animateBackToNormal() { 
+    changeFavicon('blue'); 
+    forceLedLayer('ledBlueYellow'); 
+    await sleep(400);
+    forceLedLayer('ledBlue'); 
+}
+
+async function animateToError() { 
+    changeFavicon('error'); 
+    forceLedLayer('ledYellowRed'); 
+    await sleep(400);
+    forceLedLayer('ledRed'); 
+}
 
 function cancelFileAttachment() {
-  clientSideFileBuffer = "";
-  document.getElementById('fileBadgeContainer').style.display = 'none';
-  document.getElementById('cubeStack').innerHTML = "";
-  if (fileInput) fileInput.value = "";
+    clientSideFileBuffer = "";
+    document.getElementById('fileBadgeContainer').style.display = 'none';
+    document.getElementById('cubeStack').innerHTML = "";
+    if (fileInput) fileInput.value = "";
 }
 
 function addMessagesToDisplay() {
-  if (!chatDisplay) return;
-  chatDisplay.innerHTML = "";
+    if (!chatDisplay) return;
+    chatDisplay.innerHTML = "";
 
-  chatHistory.forEach((msg, index) => {
-    const p = document.createElement('p');
-    p.className = 'ai-text';
+    chatHistory.forEach((msg, index) => {
+        const p = document.createElement('p');
+        p.className = 'ai-text';
 
-    if (msg.role === 'user') {
-      p.classList.add('operator-bubble');
+        if (msg.role === 'user') {
+            p.classList.add('operator-bubble'); 
+            
+            if (isRollbackModeActive) {
+                p.classList.add('selectable-user-msg');
+                p.style.cursor = 'pointer';
+                p.addEventListener('click', () => executeHistoryRollback(index));
+            }
 
-      if (isRollbackModeActive) {
-        p.classList.add('selectable-user-msg');
-        p.style.cursor = 'pointer';
-        p.addEventListener('click', () => executeHistoryRollback(index));
-      } else {
-        p.classList.add('connor-bubble');
-        if (index > 0 && chatHistory[index - 1].fileFormats && chatHistory[index - 1].fileFormats.length > 0) {
-          p.classList.add('file-reply-gap');
+        } else if (msg.role === 'assistant') {
+            p.classList.add('connor-bubble');
         }
-      }
 
-      if (msg.content) {
-        const textNode = document.createTextNode(msg.content);
-        p.appendChild(textNode);
-      }
+        if (msg.fileFormats && msg.fileFormats.length > 0) {
+            p.classList.add('file-reply-gap');
+        }
 
-      if (msg.fileFormats && msg.fileFormats.length > 0) {
-        if (msg.content) p.appendChild(document.createElement('br'));
+        if (msg.content) {
+            const textNode = document.createTextNode(msg.content);
+            p.appendChild(textNode);
+        }
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'inner-bubble-file-wrapper';
+        if (msg.fileFormats && msg.fileFormats.length > 0) {
+            if (msg.content) p.appendChild(document.createElement('br'));
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'inner-bubble-file-wrapper';
+            
+            msg.fileFormats.forEach(fmt => {
+                const badge = document.createElement('div');
+                badge.classList.add('inner-bubble-file-badge');
+                badge.textContent = fmt.trim().toUpperCase();
+                wrapper.appendChild(badge);
+            });
+            p.appendChild(wrapper);
+        }
 
-        msg.fileFormats.forEach(fmt => {
-          const badge = document.createElement('div');
-          badge.classList.add('inner-bubble-file-badge');
-          badge.textContent = fmt.trim().toUpperCase();
-          wrapper.appendChild(badge);
-        });
-        p.appendChild(wrapper);
-      }
+        chatDisplay.appendChild(p);
+    });
 
-      chatDisplay.appendChild(p);
-    } 
-    else if (msg.role === 'assistant') { 
-      p.classList.add('connor-bubble');
-      
-      if (msg.content) {
-        const textNode = document.createTextNode(msg.content);
-        p.appendChild(textNode);
-      }
-      
-      chatDisplay.appendChild(p);
-    }
-  });
-
-  chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    chatDisplay.scrollTop = chatDisplay.scrollHeight;
 }
 
 function renderHistory() {
-  if (!chatDisplay) return;
-
-  if (chatHistory.length === 0) {
-    if (!chatDisplay.querySelector('.welcome-message')) {
-      chatDisplay.innerHTML = "";
-      const welcomeP = document.createElement('p');
-      welcomeP.className = 'ai-text connor-bubble welcome-message';
-      welcomeP.textContent = 'My name is Connor. I am the android sent from CyberLife. System online and ready for analysis.';
-      chatDisplay.appendChild(welcomeP);
+    if (!chatDisplay) return;
+    
+    if (chatHistory.length === 0) {
+        if (!chatDisplay.querySelector('.welcome-message')) {
+            chatDisplay.innerHTML = "";
+            const welcomeP = document.createElement('p');
+            welcomeP.className = 'ai-text connor-bubble welcome-message';
+            welcomeP.textContent = 'My name is Connor. I am the android sent from CyberLife. System online and ready for analysis.';
+            chatDisplay.appendChild(welcomeP);
+        }
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        return;
     }
-    chatDisplay.scrollTop = chatDisplay.scrollHeight;
-    return;
-  }
-
-  const welcome = chatDisplay.querySelector('.welcome-message');
-  if (welcome) {
-    welcome.classList.add('cascade-fade-out');
-    setTimeout(addMessagesToDisplay, 400);
-  } else {
-    addMessagesToDisplay();
-  }
+    
+    const welcome = chatDisplay.querySelector('.welcome-message');
+    if (welcome) {
+        welcome.classList.add('cascade-fade-out');
+        setTimeout(addMessagesToDisplay, 400);
+    } else {
+        addMessagesToDisplay();
+    }
 }
 
 async function executeHistoryRollback(targetIndex) {
-  isRollbackModeActive = false;
-  const targetMessageText = chatHistory[targetIndex] && chatHistory[targetIndex].content;
-  const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text:not(.welcome-message)') : [];
-
-  let maxAnimationDelay = 0;
-  for (let i = chatHistory.length - 1; i >= targetIndex; i--) {
-    if (bubbles[i]) {
-      const delayAmount = (chatHistory.length - 1 - i) * 80;
-      maxAnimationDelay = Math.max(maxAnimationDelay, delayAmount);
-      setTimeout(() => { bubbles[i].classList.add('cascade-fade-out'); }, delayAmount);
-    }
-  }
-
-  const totalAnimationTime = maxAnimationDelay + 400;
-  chatHistory = chatHistory.slice(0, targetIndex);
-
-  try {
-    if (userInput) {
-      userInput.value = targetMessageText || "";
-      userInput.focus();
-    }
-    await animateToThinking();
-
-    const response = await fetch(BACKEND_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        action: 'branch', 
-        index: targetIndex,
-        session_id: sessionID 
-      })
-    });
-
-    if (!response.ok) throw new Error(response.statusText);
-
-    await sleep(totalAnimationTime);
-    renderHistory();
-    await animateBackToNormal();
-  } catch (err) {
-    await animateToError();
     isRollbackModeActive = false;
-    renderHistory();
-  } finally {
-    if (userInput) userInput.placeholder = "Ожидание запроса...";
-  }
+    const targetMessageText = chatHistory[targetIndex] && chatHistory[targetIndex].content;
+    const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text:not(.welcome-message)') : [];
+
+    let maxAnimationDelay = 0;
+    for (let i = chatHistory.length - 1; i >= targetIndex; i--) {
+        if (bubbles[i]) {
+            const delayAmount = (chatHistory.length - 1 - i) * 80;
+            maxAnimationDelay = Math.max(maxAnimationDelay, delayAmount);
+            setTimeout(() => { bubbles[i].classList.add('cascade-fade-out'); }, delayAmount);
+        }
+    }
+
+    const totalAnimationTime = maxAnimationDelay + 400;
+    chatHistory = chatHistory.slice(0, targetIndex);
+
+    try {
+        if (userInput) {
+            userInput.value = targetMessageText || "";
+            userInput.focus();
+        }
+        
+        await animateToThinking();
+
+        const formData = new FormData();
+        formData.append('action', 'branch');
+        formData.append('index', targetIndex);
+        formData.append('session_id', sessionID);
+
+        const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error(response.statusText);
+
+        await sleep(totalAnimationTime);
+        renderHistory();
+        await animateBackToNormal();
+    } catch (err) {
+        await animateToError();
+        isRollbackModeActive = false;
+        renderHistory();
+    } finally {
+        if (userInput) userInput.placeholder = "Введите сообщение...";
+    }
 }
 
 async function clearAllChatMemory() {
-  togglePlusMenu();
-  if (!confirm("Внимание: стереть память андроида и начать новый чат?")) return;
+    togglePlusMenu();
+    if (!confirm("Внимание: стереть память андроида и начать новый чат?")) return;
 
-  const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text') : [];
-  let maxDelay = 0;
+    const bubbles = chatDisplay ? chatDisplay.querySelectorAll('.ai-text') : [];
+    let maxDelay = 0;
 
-  bubbles.forEach((bubble, index) => {
-    const delayAmount = index * 80;
-    maxDelay = Math.max(maxDelay, delayAmount);
-    setTimeout(() => { bubble.classList.add('cascade-fade-out'); }, delayAmount);
-  });
-
-  try {
-    await animateToThinking();
-    const response = await fetch(BACKEND_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        action: 'clear',
-        session_id: sessionID 
-      })
+    bubbles.forEach((bubble, index) => {
+        const delayAmount = index * 80;
+        maxDelay = Math.max(maxDelay, delayAmount);
+        setTimeout(() => { bubble.classList.add('cascade-fade-out'); }, delayAmount);
     });
 
-    if (!response.ok) throw new Error(response.statusText);
+    try {
+        await animateToThinking();
+        
+        const formData = new FormData();
+        formData.append('action', 'clear');
+        formData.append('session_id', sessionID);
 
-    await sleep(maxDelay + 400);
+        const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            body: formData
+        });
 
-    chatHistory = [];
-    renderHistory();
-    await animateBackToNormal();
-  } catch (err) {
-    await animateToError();
-  }
+        if (!response.ok) throw new Error(response.statusText);
+
+        await sleep(maxDelay + 400);
+
+        chatHistory = [];
+        renderHistory();
+        await animateBackToNormal();
+    } catch (err) {
+        await animateToError();
+    }
 }
 
 function enableRollbackMode() {
-  if (chatHistory.filter(msg => msg.role === 'user').length === 0) {
-    alert("История диалога пуста. Нечего редактировать!");
+    if (chatHistory.filter(msg => msg.role === 'user').length === 0) {
+        togglePlusMenu();
+        alert("История диалога пуста. Нечего редактировать.");
+        return;
+    }
+    isRollbackModeActive = true;
+    renderHistory();
     togglePlusMenu();
-    return;
-  }
-  isRollbackModeActive = true;
-  renderHistory();
-  togglePlusMenu();
 }
 
 async function sendMessage() {
-  if (isRollbackModeActive) isRollbackModeActive = false;
-  const text = userInput ? userInput.value.trim() : "";
-
-  const attachedFormats = [];
-  const container = document.getElementById('fileBadgeContainer');
-
-  const cubeStack = document.getElementById('cubeStack');
-  const cubes = document.querySelectorAll('#cubeStack .file-cube-geometry');
-
-  cubes.forEach(cube => {
-    if (cube.textContent) {
-      attachedFormats.push(cube.textContent.trim());
+    const container = document.getElementById('fileBadgeContainer');
+    const cubeStack = document.getElementById('cubeStack');
+    
+    if (container) {
+        container.classList.add('file-pulse-launch');
+        setTimeout(() => {
+            if (cubeStack) cubeStack.innerHTML = "";
+            container.style.display = 'none';
+            container.classList.remove('file-pulse-launch');
+        }, 180);
     }
-  });
 
-  if (!text && attachedFormats.length === 0) return;
-
-  let finalPayloadMessage = text;
-  if (clientSideFileBuffer) {
-    finalPayloadMessage = `[Анализ данных ${attachedFormats.join(', ')}]:\n${clientSideFileBuffer}\n${text}`;
-  }
-
-  const formatsBackup = attachedFormats.length > 0 ? [...attachedFormats] : null;
-
-  chatHistory.push({
-    role: 'user',
-    content: text ? text : "",
-    fileFormats: formatsBackup
-  });
-
-  if (userInput) userInput.value = "";
-  renderHistory();
-
-  if (container) {
-    container.classList.add('file-pulse-launch');
-    await sleep(180);
-    if (cubeStack) cubeStack.innerHTML = "";
-    container.style.display = 'none';
-    container.classList.remove('file-pulse-launch');
-  }
-
-  await animateToThinking();
-
-  const slidingWindow = chatHistory.slice(Math.max(0, chatHistory.length - 15));
-  
-  try {
-    const response = await fetch(BACKEND_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        action: 'chat', 
-        message: finalPayloadMessage, 
-        session_id: sessionID 
-      })
+    if (isRollbackModeActive) isRollbackModeActive = false;
+    
+    const text = userInput ? userInput.value.trim() : "";
+    const attachedFormats = [];
+    const cubes = document.querySelectorAll('#cubeStack .file-cube-geometry');
+    
+    cubes.forEach(cube => {
+        if (cube.textContent) {
+            attachedFormats.push(cube.textContent.trim());
+        }
     });
 
-    if (!response.ok) throw new Error(response.statusText);
-    const data = await response.json();
-    if (data && data.message) {
-      chatHistory.push({ role: 'assistant', content: data.message });
-      renderHistory();
-      await animateBackToNormal();
-    } else {
-      throw new Error('No message in response');
-    }
-  } catch (err) {
-    await animateToError();
-    chatHistory.push({ role: 'assistant', content: '[Ошибка: сервер перегружен или недоступен]' });
+    if (!text && attachedFormats.length === 0) return;
+
+    const formatsBackup = attachedFormats.length > 0 ? [...attachedFormats] : null;
+
+    chatHistory.push({
+        role: 'user',
+        content: text ? text : "",
+        fileFormats: formatsBackup
+    });
+
+    const cachedFiles = fileInput && fileInput.files ? [...fileInput.files] : [];
+
+    if (userInput) userInput.value = "";
+    if (fileInput) fileInput.value = "";
+    
     renderHistory();
-  } finally {
-    clientSideFileBuffer = "";
-    if (userInput) userInput.placeholder = "Ожидание запроса...";
-  }
+    await animateToThinking();
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'chat');
+        formData.append('text', text);
+        formData.append('session_id', sessionID);
+        
+        if (cachedFiles.length > 0) {
+            for (let i = 0; i < cachedFiles.length; i++) {
+                formData.append('files', cachedFiles[i], cachedFiles[i].name);
+            }
+        }
+        
+        const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok || data.status === "error") {
+            throw new Error(data.message || "Неизвестная ошибка сервера");
+        }
+        
+        if (data && data.status === "success") {
+            chatHistory.push({ 
+                role: 'assistant', 
+                content: data.message,
+                fileMetadata: data.files || null
+            });
+            renderHistory();
+            await animateBackToNormal();
+        }
+    } catch (err) {
+        await animateToError();
+        
+        chatHistory.push({ 
+            role: 'assistant', 
+            content: '[Ошибка: сервер перегружен или недоступен]'
+        });
+        renderHistory();
+    } finally {
+        if (userInput) userInput.placeholder = "Введите сообщение...";
+    }
 }
 
 function onFileChange() {
-  togglePlusMenu();
-  if (!fileInput) return;
+    togglePlusMenu();
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+    
+    const file = fileInput.files[0];
+    if (!file) return;
 
-  const file = fileInput.files[0];
-  if (!file) return;
+    const cubeStack = document.getElementById('cubeStack');
+    const container = document.getElementById('fileBadgeContainer');
+    const attachIcon = document.getElementById('attachIcon');
 
-  const cubeStack = document.getElementById('cubeStack');
-  const container = document.getElementById('fileBadgeContainer');
-  const attachIcon = document.getElementById('attachIcon');
-
-  if (cubeStack && cubeStack.children.length >= 3) {
-    alert("Превышен лимит: максимум 3 вложения в одну сессию отправки.");
-    fileInput.value = "";
-    return;
-  }
-
-  const fileExtension = file.name.split('.').pop().toUpperCase();
-
-  if (attachIcon) attachIcon.className = "fa-solid fa-paperclip fa-spin";
-  if (userInput) userInput.placeholder = "Введите подпись...";
-
-  const reader = new FileReader();
-
-  reader.onload = (e) => {
-    try {
-      clientSideFileBuffer = `\n[Добавить подпись ${file.name}]:\n${e.target.result}`;
-
-      if (cubeStack && container) {
-        container.classList.remove('file-pulse-launch');
-
-        const newCube = document.createElement('div');
-        newCube.className = 'file-cube-geometry';
-        newCube.textContent = fileExtension;
-        cubeStack.appendChild(newCube);
-
-        container.style.display = 'flex';
-      }
-      if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
-    } catch (jsErr) {
-      console.error("Ошибка вёрстки кубов:", jsErr);
-      if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
-      if (userInput) userInput.placeholder = "Ошибка системы.";
+    if (cubeStack && cubeStack.children.length >= 3) {
+        alert("Превышен лимит: максимум 3 вложения в одну сессию отправки.");
+        fileInput.value = "";
+        return;
     }
-  };
 
-  reader.onerror = () => {
-    if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
-    if (userInput) userInput.placeholder = "Ошибка системы.";
-  };
+    const fileExtension = file.name.split('.').pop().toLowerCase();
 
-  reader.readAsText(file);
-  fileInput.value = "";
+    if (attachIcon) attachIcon.className = "fa-solid fa-paperclip fa-spin";
+    if (userInput) userInput.placeholder = "Введите подпись...";
+
+    try {
+        if (cubeStack && container) {
+            container.classList.remove('file-pulse-launch');
+
+            const newCube = document.createElement('div');
+            newCube.className = 'file-cube-geometry';
+            newCube.textContent = fileExtension.toUpperCase();
+            cubeStack.appendChild(newCube);
+
+            container.style.display = 'flex';
+        }
+        if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
+    } catch (jsErr) {
+        console.error("Ошибка вёрстки кубов:", jsErr);
+        if (attachIcon) attachIcon.className = "fa-solid fa-paperclip";
+    }
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', init);
 } else {
-  init();
+    init();
 }
 </script>
 </body>

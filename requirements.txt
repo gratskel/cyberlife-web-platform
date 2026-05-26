@@ -1,5 +1,11 @@
+aiofiles==25.1.0
+beautifulsoup4==4.12.3
 fastapi==0.136.1
-uvicorn==0.47.0
 groq==1.2.0
+httpx==0.28.1
 pydantic==2.13.4
+PyMuPDF==1.27.2.3
+pytesseract==0.3.13
 python-dotenv==1.2.2
+python-magic==0.4.27
+uvicorn==0.47.0
