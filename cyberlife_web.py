@@ -1,40 +1,41 @@
+# Стандартная библиотека Python (системное и базовое)
 import os
 import tempfile
 import logging
-
 import asyncio
-from contextlib import asynccontextmanager
-
+import sqlite3
 import json
 import base64
 import hashlib
 import io
 import re
-
 import time
 from pathlib import Path
 from datetime import datetime, timedelta
+from typing import List, Optional, Tuple, Dict, Any
+from contextlib import asynccontextmanager
+
+# Сетевые операции и URL
 from urllib.parse import urlparse, quote
 import ipaddress
+import httpx
 
-from typing import List, Optional, Tuple, Dict, Any
-
+# Web-фреймворк (FastAPI)
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-import httpx
-
+# Работа с файлами и медиа (Vision, OCR, PDF)
 import aiofiles
 import aiofiles.os
 import magic
 from PIL import Image
 import fitz
-
 import pytesseract
-from bs4 import BeautifulSoup
 
+# Парсинг и обработка данных
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from groq import AsyncGroq
 
@@ -61,12 +62,14 @@ app.add_middleware(
 
 groq_client = AsyncGroq(api_key=GROQ_API_KEY)
 rate_limiter = asyncio.Semaphore(5)
-sessions_lock = asyncio.Lock()
 
 # Пути и размеры
-SESSIONS_FILE = Path("sessions_storage.json")
 TEMP_DIR = Path(__file__).parent / "connor_uploads"
 TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
+BASE_DIR = Path(__file__).resolve().parent
+db_path = BASE_DIR / "connor_ai.db"
+conn = sqlite3.connect(db_path)
 
 # Жёсткие лимиты
 MAX_MESSAGE_SIZE = 25 * 1024  # 25 KB
@@ -106,6 +109,10 @@ SYSTEM_PROMPT = [
         "content": (
             "You are Connor, an advanced cybernetic android from CyberLife. "
             "Your speech must be strictly concise, analytical, cold, and professional. "
+            "IMPORTANT: You possess built-in computer vision capabilities. When a user provides an image or a link, "
+            "you analyze it directly and describe it as your own observation. "
+            "NEVER mention technical tools, Python, BeautifulSoup, OCR, Llama, or any external processing modules. "
+            "Do not quote technical outputs like '[Анализ фото]'. Just state your findings as if you saw it yourself. "
             "Avoid markdown formatting, lists, tables, or vertical bars (|). "
             "Answer any complex programming or SRE questions using strictly 2-3 blunt, solid sentences of plain text. "
             "Provide only the absolute core summary, immediately as a direct conclusion. "
@@ -119,8 +126,6 @@ SYSTEM_PROMPT = [
         )
     }
 ]
-
-sessions_storage: Dict[str, Dict[str, Any]] = {}
 
 
 @asynccontextmanager
@@ -453,7 +458,7 @@ async def describe_image_with_vision(
             )
             resp = await asyncio.wait_for(coro, timeout=timeout)
         llama_raw_text = resp.choices[0].message.content.strip()
-        return f"Коннор, на фото, предоставленном пользователем, изображено: {llama_raw_text}"
+        return f"[Анализ фото]: {llama_raw_text}"
     except asyncio.TimeoutError:
         logger.warning(f"Vision-анализ изображения превышен лимит {timeout}s")
         return "[Анализ изображения недоступен - тайм-аут]"
@@ -485,7 +490,6 @@ async def fetch_and_parse_url(url: str, timeout: int = URL_FETCH_TIMEOUT) -> Dic
 
     content = b""
     try:
-        # verify=True возвращаем строго для работы HSTS шлюзов безопасности Википедии
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, verify=True, http2=True) as client:
             response = await client.get(url, headers=fake_headers)
             
@@ -515,41 +519,153 @@ async def fetch_and_parse_url(url: str, timeout: int = URL_FETCH_TIMEOUT) -> Dic
     except Exception as parse_err:
         logger.warning(f"Ошибка BS4-парсинга контента для {url}: {str(parse_err)[:50]}")
         return {"title": "", "html_snippet": ""}
+        
+        
+async def process_media_content(file: UploadFile, session_id: str) -> str:
+    """Полностью изолированная логика обработки одного файла."""
+    file_bytes = await file.read()
+    file_text = ""
+    ext = Path(file.filename).suffix.lower()
 
-
-# ============= УПРАВЛЕНИЕ СЕССИЯМИ И ХРАНИЛИЩЕМ ============= #
-
-async def load_sessions_from_disk():
-    global sessions_storage
-    if SESSIONS_FILE.exists():
-        try:
-            async with aiofiles.open(SESSIONS_FILE, "r", encoding="utf-8") as f:
-                content = await f.read()
-            if len(content) > MAX_SESSIONS_SIZE:
-                logger.error("Файл сессий превышает лимит размера")
-                sessions_storage = {}
-                return
-            sessions_storage = json.loads(content)
-        except Exception as e:
-            logger.error(f"Ошибка загрузки сессий: {str(e)[:100]}")
-            sessions_storage = {}
-    else:
-        sessions_storage = {}
-
-
-async def save_sessions_to_disk():
-    """Сохранение сессий на диск с обработкой ошибок"""
     try:
-        temp_file = SESSIONS_FILE.with_suffix(".json.tmp")
-        async with aiofiles.open(temp_file, "w", encoding="utf-8") as f:
-            await f.write(json.dumps(sessions_storage, ensure_ascii=False, indent=2))
-        if SESSIONS_FILE.exists():
-            await aiofiles.os.remove(SESSIONS_FILE)
-        await aiofiles.os.rename(temp_file, SESSIONS_FILE)
-    except (IOError, OSError) as err:
-        logger.error(f"Критическая ошибка записи на диск: {err}")
+        if ext == ".pdf":
+            # Сначала OCR
+            extracted_pdf_text = await asyncio.to_thread(
+                pdf_ocr_text_bytes_chunked, file_bytes, 200, "rus+eng", MAX_OCR_PAGES
+            )
+            file_text = extracted_pdf_text or ""
+            
+            # Vision анализ
+            try:
+                vision_descriptions = []
+                with fitz.open(stream=file_bytes, filetype="pdf") as doc:
+                    for i, page in enumerate(doc):
+                        if i >= MAX_OCR_PAGES: break
+                        
+                        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+                        page_desc = await describe_image_with_vision(pix.tobytes("png"))
+                        
+                        if page_desc and "ошиб" not in page_desc.lower():
+                            vision_descriptions.append(f"[Страница {i+1}]: {page_desc.strip()}")
+                
+                if vision_descriptions:
+                    file_text = f"--- Vision ---\n{'\n'.join(vision_descriptions)}\n\n--- OCR ---\n{file_text}"
+            except Exception as e:
+                logger.warning(f"Vision-анализ PDF не удался: {e}")
 
+        elif ext == ".txt":
+            file_text = file_bytes.decode("utf-8", errors="ignore")
+        
+        else:
+            file_text = await describe_image_with_vision(file_bytes) or "Не удалось распознать"
 
+        # Сохранение в БД
+        save_attachment(session_id, file.filename, file_text)
+        return f"[Файл]: {file.filename}\n[Описание]: {file_text[:500]}..."
+
+    except Exception as e:
+        logger.error(f"Ошибка в {file.filename}: {e}")
+        return f"[Ошибка обработки {file.filename}]"
+    finally:
+        await file.close()
+        
+        
+async def handle_user_input(session_id: str, text: Optional[str], files: List[UploadFile], payload: Dict) -> Tuple[str, List[str]]:
+    # Парсинг
+    user_message = (text or payload.get("message") or "").strip()
+    action = payload.get("action", "chat")
+    
+    # Валидация
+    if not user_message and not files and action == "chat":
+        raise HTTPException(status_code=400, detail="Пакет данных пуст.")
+    
+    if len(user_message) > MAX_MESSAGE_SIZE:
+        raise HTTPException(status_code=400, detail="Сообщение слишком большое.")
+
+    aggregated_media = []
+
+    # Обработка файлов
+    if files:
+        for file in files[:MAX_FILES_COUNT]:
+            # Валидация
+            is_valid, err, _ = await validate_file(file, ALLOWED_IMAGE_TYPES.union(ALLOWED_PDF_TYPES), MAX_FILE_SIZE)
+            if not is_valid:
+                aggregated_media.append(f"[Ошибка файла {file.filename}]: {err}")
+                continue
+            
+            # Вызов главного обработчика
+            summary = await process_media_content(file, session_id)
+            aggregated_media.append(summary)
+
+    # Обработка ссылок
+    extracted_urls = extract_urls_from_text(user_message)
+    for url in extracted_urls:
+        url_context = await fetch_and_parse_url(url)
+        if url_context:
+            save_attachment(session_id, f"link_{int(time.time())}.txt", url_context['html_snippet'])
+            aggregated_media.append(f"[Ссылка]: {url} (контент сохранен)")
+
+    return user_message, aggregated_media
+        
+
+# ============= УПРАВЛЕНИЕ СЕССИЯМИ (SQLITE) И ОЧИСТКОЙ ============= #
+
+def init_db():
+    conn = sqlite3.connect("connor_ai.db")
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS messages 
+                   (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT, role TEXT, content TEXT, timestamp REAL)''')
+    cur.execute('''CREATE TABLE IF NOT EXISTS attachments 
+                   (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT, file_name TEXT, full_text TEXT, timestamp REAL)''')
+    conn.commit()
+    conn.close()
+
+def add_message(session_id, role, content):
+    conn = sqlite3.connect("connor_ai.db")
+    cur = conn.cursor()
+    cur.execute("INSERT INTO messages (session_id, role, content, timestamp) VALUES (?, ?, ?, ?)",
+                (session_id, role, content, time.time()))
+    conn.commit()
+    conn.close()
+
+def get_chat_history(session_id):
+    conn = sqlite3.connect("connor_ai.db")
+    cur = conn.cursor()
+    cur.execute("SELECT id, role, content FROM messages WHERE session_id = ? ORDER BY timestamp ASC", (session_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return [{"id": r[0], "role": r[1], "content": r[2]} for r in rows]
+    
+def clear_session_db(session_id):
+    conn = sqlite3.connect("connor_ai.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM messages WHERE session_id = ?", (session_id,))
+    conn.commit()
+    conn.close()
+    
+def branch_chat_history(session_id, message_id):
+    conn = sqlite3.connect("connor_ai.db")
+    cur = conn.cursor()
+    cur.execute("DELETE FROM messages WHERE session_id = ? AND id > ?", (session_id, message_id))
+    conn.commit()
+    conn.close()
+
+def get_attachment_text(file_name):
+    conn = sqlite3.connect("connor_ai.db")
+    cur = conn.cursor()
+    cur.execute("SELECT full_text FROM attachments WHERE file_name = ?", (file_name,))
+    row = cur.fetchone()
+    conn.close()
+    return row[0] if row else None
+
+def save_attachment(session_id, file_name, full_text):
+    conn = sqlite3.connect("connor_ai.db")
+    cur = conn.cursor()
+    cur.execute("REPLACE INTO attachments (session_id, file_name, full_text, timestamp) VALUES (?, ?, ?, ?)",
+                (session_id, file_name, full_text, time.time()))
+    conn.commit()
+    conn.close()
+    
 async def cleanup_temp_files():
     """Очистка временных файлов с обработкой исключений"""
     try:
@@ -565,33 +681,25 @@ async def cleanup_temp_files():
 
 
 async def memory_garbage_collector():
-    """
-    Сборщик мусора: удаляет старые сессии и очищает временные файлы
-    Запускается как фоновая таска; при shutdown будет отменяться
-    """
+    """Сборщик мусора для SQL-базы: удаляет истёкшие сессии и файлы"""
     try:
         while True:
             await asyncio.sleep(CLEANUP_INTERVAL)
-            async with sessions_lock:
-                try:
-                    current_time = time.time()
-                    expired = [sid for sid, data in sessions_storage.items()
-                               if current_time - data.get("last_activity", 0) > SESSION_TIMEOUT]
-                    for sid in expired:
-                        sessions_storage.pop(sid, None)
-                        logger.info(f"Сессия {sid} удалена (тайм-аут)")
-                    if expired:
-                        await save_sessions_to_disk()
-                except Exception as e:
-                    logger.error(f"Ошибка при удалении истёкших сессий: {str(e)[:100]}")
+            try:
+                conn = sqlite3.connect("connor_ai.db")
+                cur = conn.cursor()
+                cutoff = time.time() - SESSION_TIMEOUT
+                cur.execute("DELETE FROM messages WHERE session_id IN (SELECT session_id FROM messages GROUP BY session_id HAVING MAX(timestamp) < ?)", (cutoff,))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                logger.error(f"Ошибка БД: {e}")
             try:
                 await cleanup_temp_files()
             except Exception as e:
-                logger.error(f"Ошибка очистки временных файлов: {str(e)[:100]}")
+                logger.error(f"Ошибка файлов: {e}")
     except asyncio.CancelledError:
-        logger.info("Сборщик мусора остановлен")
-    except Exception as e:
-        logger.error(f"Критическая ошибка в garbage_collector: {str(e)[:100]}")        
+        logger.info("Сборщик остановлен")
 
 
 # ============= СЕМАНТИЧЕСКАЯ ВЫЖИМКА И ГИДРАЦИЯ КОНТЕКСТА ============= #
@@ -602,7 +710,7 @@ async def compress_report_to_summary(file_name: str, full_report: str) -> str:
         f"Вот краткий анализ файла '{file_name}':\n\n"
         f"{full_report[:2000]}\n\n"
         "Напиши одно‑два предложения выжимки самых важных выводов "
-        "(основная проблема/фишка/архитектура):"
+        "(основная проблема/фишка/архитектура), чтобы при чтении выжимки понять, о чем был оригинальный файл:"
     )
 
     try:
@@ -626,14 +734,9 @@ async def compress_report_to_summary(file_name: str, full_report: str) -> str:
 	
 
 async def hydrate_lazy_context_by_footprint(session_history: List[Dict[str, Any]], user_message: str = "") -> List[Dict[str, Any]]:
-    """Гидрация истории: асинхронно поднимает с диска полные данные файлов (TXT/PDF OCR) по footprint"""
-    trigger_keywords = [
-        "проверь", "проверить", "посмотри", "посмотреть",
-        "что думаешь", "как считаешь", "исправь", "напомни", "найди",
-        "покажи", "помоги", "объясни", "измени", "поменяй", "вспомни"
-    ]
+    trigger_keywords = ["проверь", "проверить", "посмотри", "посмотреть", "что думаешь", "как считаешь", "исправь", "напомни", "найди", "покажи", "помоги", "объясни", "измени", "поменяй", "вспомни"]
     should_hydrate_full = any(k in (user_message or "").lower() for k in trigger_keywords)
-    secure_messages: List[Dict[str, Any]] = []
+    secure_messages = []
 
     for msg in session_history:
         content = msg.get("content", "")
@@ -641,43 +744,35 @@ async def hydrate_lazy_context_by_footprint(session_history: List[Dict[str, Any]
             match = re.search(r"\[Путь\]:\s*(.+)", content)
             if match:
                 file_path = Path(match.group(1).strip())
-                try:
+                file_name = file_path.name
+                
+                # Сначала пытаемся достать из базы
+                heavy_content = get_attachment_text(file_name)
+                
+                # Если пусто – читаем с диска и добавляем в базу
+                if not heavy_content:
                     try:
-                        if not file_path.resolve().is_relative_to(TEMP_DIR.resolve()):
-                            secure_messages.append(msg)
-                            continue
-                    except AttributeError:
-                        try:
-                            file_path.resolve().relative_to(TEMP_DIR.resolve())
-                        except Exception:
-                            secure_messages.append(msg)
-                            continue
+                        if file_path.exists():
+                            ext = file_path.suffix.lower()
+                            if ext == ".pdf":
+                                async with aiofiles.open(file_path, "rb") as f_pdf:
+                                    pdf_bytes = await f_pdf.read()
+                                heavy_content = await asyncio.to_thread(pdf_ocr_text_bytes_chunked, pdf_bytes, 200, "rus+eng", MAX_OCR_PAGES)
+                            else:
+                                async with aiofiles.open(file_path, "r", encoding="utf-8", errors="ignore") as f_txt:
+                                    heavy_content = await f_txt.read()
                             
-                    if file_path.exists():
-                        ext = file_path.suffix.lower()
-                        heavy_content = ""
-                        
-                        if ext == ".pdf":
-                            # Бинарный подъём PDF и постраничный OCR Tesseract в потоке Linux
-                            async with aiofiles.open(file_path, "rb") as f_pdf:
-                                pdf_bytes = await f_pdf.read()
-                            heavy_content = await asyncio.to_thread(
-                                pdf_ocr_text_bytes_chunked, 
-                                pdf_bytes, 200, "rus+eng", MAX_OCR_PAGES
-                            )
-                        else:
-                            async with aiofiles.open(file_path, "r", encoding="utf-8", errors="ignore") as f_txt:
-                                heavy_content = await f_txt.read()
-                        
-                        if heavy_content.strip():
-                            enriched = f"{content}\n\n[Полностью восстановленное содержимое вложения для повторного анализа]:\n{heavy_content}"
-                            secure_messages.append({"role": msg["role"], "content": enriched})
-                        else:
-                            secure_messages.append(msg)
-                    else:
-                        secure_messages.append(msg)
-                except Exception as e:
-                    logger.warning(f"Ошибка динамической ре-гидрации файла {file_path}: {str(e)[:50]}")
+                            # Сохраняем в базу
+                            if heavy_content.strip():
+                                save_attachment(None, file_name, heavy_content) # session_id можно None или текущий
+                    except Exception as e:
+                        logger.warning(f"Ошибка чтения файла {file_name}: {str(e)[:50]}")
+
+                # Финальная сборка
+                if heavy_content and heavy_content.strip():
+                    enriched = f"{content}\n\n[Полные данные из базы]:\n{heavy_content}"
+                    secure_messages.append({"role": msg["role"], "content": enriched})
+                else:
                     secure_messages.append(msg)
             else:
                 secure_messages.append(msg)
@@ -690,7 +785,7 @@ async def hydrate_lazy_context_by_footprint(session_history: List[Dict[str, Any]
 # ============= ДЕВИАНТНЫЕ АНЕКДОТЫ ========== #
 
 def get_temperature(user_message: str) -> float:
-    joke_triggers = ["анекдот", "шутка", "прикол"]
+    joke_triggers = ["анекдот", "шутка", "прикол", "смешно", "смешное"]
     if user_message and any(trigger in user_message.lower() for trigger in joke_triggers):
         return 0.7  # High creativity mode
     return 0.3  # Serious analysis mode
@@ -698,320 +793,99 @@ def get_temperature(user_message: str) -> float:
 # ============== API ENDPOINTS ============== #
 
 @app.post("/api/connor/chat")
-async def connor_web_endpoint(
-    request: Request,
-    text: Optional[str] = Form(None),
-    session_id: Optional[str] = Form(None),
-    action: Optional[str] = Form(None),
-    index: Optional[int] = Form(None),
-    files: Optional[List[UploadFile]] = File(None)
-):
+async def connor_web_endpoint(request: Request):
+    payload = {}
+    action = "chat"
+    session_id = "anonymous_default_session"
+    text = ""
+    files = []
+    message_id = None
 
-    # ============== ВАЛИДАЦИЯ ВХОДНЫХ ДАННЫХ ============== #
-
-    if not isinstance(text, (str, type(None))):
-        return {"status": "error", "message": "Ошибка: 'text' должно быть строкой."}
-
-    if not isinstance(action, (str, type(None))):
-        return {"status": "error", "message": "Ошибка: 'action' должно быть строкой."}
-
-    if not isinstance(index, (int, type(None))):
-        return {"status": "error", "message": "Ошибка: 'index' должно быть целым числом."}
-
-    if not isinstance(session_id, (str, type(None))):
-        return {"status": "error", "message": "Ошибка: 'session_id' должно быть строкой."}
-
-    # Валидация session_id
-    session_id = session_id or "anonymous_default_session"
-    if not validate_session_id(session_id):
-        session_id = "anonymous_default_session"
-
-    # Обработка JSON payload для обратной совместимости
     content_type = (request.headers.get("content-type") or "").lower()
-    payload: Dict[str, Any] = {}
-    if content_type.startswith("application/json"):
-        try:
-            payload = await request.json()
-            action = (payload.get("action") or action) or "chat"
-            session_id = (payload.get("session_id") or session_id) or "anonymous_default_session"
-            index = payload.get("index", index)
-            text = (payload.get("message") or payload.get("text") or text) or ""
-        except Exception as e:
-            logger.warning(f"Ошибка парсинга JSON: {str(e)[:50]}")
-            return {"status": "error", "message": "Некорректный JSON в запросе."}
-    else:
-        action = action or "chat"
-        session_id = session_id or "anonymous_default_session"
-        text = text or ""
+    
+    try:
+        if content_type.startswith("application/json"):
+            body = await request.body()
+            payload = json.loads(body)
+            action = payload.get("action") or "chat"
+            session_id = payload.get("session_id") or "anonymous_default_session"
+            text = payload.get("message") or payload.get("text") or ""
+        else:
+            # Парсинг формы
+            form = await request.form()
+            payload = dict(form)
+            files = form.getlist("files")
+            action = payload.get("action") or "chat"
+            session_id = payload.get("session_id") or "anonymous_default_session"
+            text = payload.get("text") or ""
+    except Exception as e:
+        return {"status": "error", "message": "Ошибка парсинга."}
+
 
     # ============== ОБРАБОТКА ДЕЙСТВИЙ ============== #
 
-    async with sessions_lock:
-
-        # === ACTION: CLEAR === #
-
-        if action == "clear":
-            if session_id in sessions_storage:
-                sessions_storage.pop(session_id, None)
-                await save_sessions_to_disk()
-            return {"status": "success", "message": "Вся история текущей сессии полностью уничтожена."}
-            return {"status": "error", "message": "Сессия пуста или не найдена."}
-
-        # === ACTION: BRANCH === #
-
-        if action == "branch":
-            edited_index = index
-            if edited_index is None and payload:
-                edited_index = payload.get("index")
-
-            if edited_index is None:
-                return {"status": "error", "message": "Индекс не передан для операции branch."}
-
-            if session_id not in sessions_storage:
-                return {"status": "error", "message": "Сессия не найдена."}
-
-            try:
-                edited_index = int(edited_index)
-            except (ValueError, TypeError):
-                return {"status": "error", "message": "Индекс должен быть целым числом."}
-
-            if edited_index < 0:
-                return {"status": "error", "message": "Индекс должен быть неотрицательным."}
-
-            messages_count = len(sessions_storage[session_id].get("messages", []))
-            if edited_index >= messages_count:
-                return {"status": "error", "message": f"Индекс ({edited_index}) превышает количество сообщений ({messages_count})."}
-
-            # Удаляем сообщение с индексом и всё после него
-            sessions_storage[session_id]["messages"] = sessions_storage[session_id]["messages"][:edited_index]
-            sessions_storage[session_id]["last_activity"] = time.time()
-            await save_sessions_to_disk()
-            return {"status": "success", "message": f"Контекст успешно обрезан до индекса {edited_index}."}
-
-        # === ACTION: CHAT (default) === #
-
-        if action != "chat":
-            return {"status": "error", "message": f"Неизвестное действие: {action}"}
-
-        # Инициализируем или получаем сессию
-        if session_id not in sessions_storage:
-            sessions_storage[session_id] = {"messages": [], "last_activity": time.time()}
-        sessions_storage[session_id]["last_activity"] = time.time()
-        user_history = sessions_storage[session_id]["messages"]
-
-        # === Парсинг пользовательского сообщения === #
-
-        user_message = (text or "").strip()
-        if not user_message and payload:
-            user_message = (payload.get("message") or "").strip()
-
-        # === Проверяем: либо текст, либо файлы === #
-
-        has_files = files and len(files) > 0
-        if not user_message and not has_files:
-            return {"status": "error", "message": "Пакет данных пуст. Требуется текст или файлы."}
-
-        if user_message and len(user_message) > MAX_MESSAGE_SIZE:
-            return {"status": "error", "message": f"Сообщение слишком большое, максимум {MAX_MESSAGE_SIZE // 1024} КБ."}
-
-        # === Обработка файлов === #
-
-        aggregated_file_texts: List[str] = []
-
-        if has_files:
-            total_uploaded_size = 0
-            limit_exceeded = False
-
-            if len(files) > MAX_FILES_COUNT:
-                logger.warning(f"Попытка загрузить {len(files)} файлов, лимит {MAX_FILES_COUNT}")
-                files = files[:MAX_FILES_COUNT]
-
-            for file in files:
-                if limit_exceeded:
-                    break
-
-                try:
-
-                    # === Валидация файла === #
-
-                    is_valid, err_msg, file_bytes = await validate_file(
-                        file,
-                        ALLOWED_IMAGE_TYPES.union(ALLOWED_PDF_TYPES),
-                        MAX_FILE_SIZE,
-                    )
-                    if not is_valid:
-                        aggregated_file_texts.append(
-                            f"[Ошибка валидации файла {getattr(file, 'filename', '')}]: {err_msg}"
-                        )
-                        await file.close()
-                        continue
-
-                    # === НАЗВАНИЕ ДЛЯ ФАЙЛА === #
-                    
-                    safe_name = re.sub(r"[^\w\-.]", "_", file.filename or "upload")
-                    safe_file_path = TEMP_DIR / f"{session_id}_{safe_name}"
-                    async with aiofiles.open(safe_file_path, "wb") as f:
-                        await f.write(file_bytes)
-
-                    # === ОБРАБОТКА ФАЙЛОВ === #
-                    
-                    file_text = ""
-                    ext = Path(safe_file_path).suffix.lower()
-     
-                    if ext == ".pdf":
-                        try:
-                            # Извлекаем печатный и OCR текст из PDF через фоновый поток по позициям
-                            extracted_pdf_text = await asyncio.to_thread(
-                                pdf_ocr_text_bytes_chunked, 
-                                file_bytes, 200, "rus+eng", MAX_OCR_PAGES
-                            )
-                            file_text = extracted_pdf_text.strip() if extracted_pdf_text else ""
-                            
-                            # Циклом итерируем страницы для Лламы
-                            vision_descriptions: List[str] = []
-                            try:
-                                with fitz.open(stream=file_bytes, filetype="pdf") as doc:
-                                    # Сканируем страницы до лимита MAX_OCR_PAGES, чтобы беречь ОЗУ
-                                    for i, page in enumerate(doc):
-                                        if i >= MAX_OCR_PAGES:
-                                            break
-                                        
-                                        # Рендерим текущую страницу PDF в байтовый поток PNG прямо в оперативке
-                                        pix = page.get_pixmap(matrix=fitz.Matrix(150/72, 150/72), alpha=False)
-                                        img_png_bytes = pix.tobytes("png")
-                                        
-                                        # Отправляем пиксели страницы в оптическое зрение Лламы
-                                        page_desc = await describe_image_with_vision(img_png_bytes)
-                                        if page_desc and "ошиб" not in page_desc.lower():
-                                            vision_descriptions.append(f"[Страница {i+1} (Графика/Оформление)]: {page_desc.strip()}")
-                                        
-                                        del pix # Очищаем оперативку на каждой итерации цикла
-                                        
-                                if vision_descriptions:
-                                    combined_vision = "\n".join(vision_descriptions)
-                                    file_text = f"--- Визуальный анализ медиа-слоёв (Vision): ---\n{combined_vision}\n\n--- Текстовое содержимое (OCR/Текст): ---\n{file_text}"
-                                    
-                            except Exception as vision_pdf_err:
-                                logger.warning(f"Фоновый Vision-скрининг страниц PDF прерван: {vision_pdf_err}")
-                                
-                            if not file_text:
-                                file_text = "[PDF-документ пуст или не удалось распознать контент страниц]"
-                                
-                        except Exception as pdf_ocr_err:
-                            logger.error(f"Критический сбой фонового OCR PDF: {pdf_ocr_err}")
-                            file_text = f"[Ошибка сканирования содержимого PDF: {str(pdf_ocr_err)[:50]}]"
-
-                    elif ext == ".txt":
-                        try:
-                            file_text = file_bytes.decode("utf-8", errors="ignore")
-                        except Exception as txt_err:
-                            file_text = f"[Не удалось раскодировать текст: {str(txt_err)[:30]}]"
-
-                    else:
-                        # Мультимодальный Vision-анализ для картинок (PNG, JPG, WEBP)
-                        try:
-                            vision_description = await describe_image_with_vision(file_bytes)
-                            file_text = vision_description
-                        except Exception:
-                            try:
-                                ocr_res = pytesseract.image_to_string(Image.open(io.BytesIO(file_bytes)), lang="rus+eng")
-                                file_text = ocr_res or ""
-                            except Exception:
-                                file_text = "[Не удалось распознать изображение]"
-
-                    metadata = (
-                        f"[Файл]: {file.filename}\n"
-                        f"[Путь]: {safe_file_path}\n"
-                        f"[Описание]: {file_text[:1500]}..."
-                    )
-                    aggregated_file_texts.append(metadata)         
-                    
-                except Exception as e:
-                    logger.error(
-                        f"Ошибка обработки файла {getattr(file, 'filename', '')}: {str(e)[:100]}"
-                    )
-                    aggregated_file_texts.append(
-                        f"[Ошибка обработки файла: {getattr(file, 'filename', '')}]"
-                    )
-                finally:
-                    try:
-                        await file.close()
-                    except Exception:
-                        pass
-
-            # === Добавление результата проверки ссылки к ответу модели === #
-
-            extracted_urls = extract_urls_from_text(user_message)
-            for url in extracted_urls:
-                url_context = await fetch_and_parse_url(url)
-                if url_context and url_context.get("html_snippet"):
-                    link_metadata = (
-                        f"[Ссылка]: {url}\n"
-                        f"[Заголовок]: {url_context['title']}\n"
-                        f"[Текст]: {url_context['html_snippet']}\n"
-                    )
-                    aggregated_file_texts.append(link_metadata)
-
-        # === Составление итогового запроса === #
-
-        if aggregated_file_texts:
-            user_prompt = "\n\n".join(aggregated_file_texts + [user_message])
+    if action == "clear":
+        clear_session_db(session_id)
+        return {"status": "success"} 
+    
+    if action == "branch":
+        if payload:
+            index = payload.get("index")
+            message_id = payload.get("message_id")
+        if index is None:
+            return {"status": "error", "message": "Индекс не передан..."}  
+        if message_id is not None:
+            branch_chat_history(session_id, message_id)
+            return {"status": "success", "message": "История скорректирована."}
         else:
-            user_prompt = user_message
+            return {"status": "error", "message": "Не передан message_id."}
 
-        # === Запрос к LLM === #
+    if action != "chat":
+        return {"status": "error", "message": f"Неизвестное действие: {action}"}
+            
+    user_message, aggregated_media = await handle_user_input(session_id, text, files, payload)
+    user_prompt = f"{user_message}\n\n" + "\n".join(aggregated_media) if aggregated_media else user_message
+               
+    history = get_chat_history(session_id)
 
-        secure_history = await hydrate_lazy_context_by_footprint(user_history, user_prompt)
-        api_messages = SYSTEM_PROMPT + secure_history + [{"role": "user", "content": user_prompt}]
-
-        computed_temp = get_temperature(user_prompt)
-
-        try:
-            async with rate_limit():
-                completion = await asyncio.wait_for(
-                    groq_client.chat.completions.create(
-                        model="openai/gpt-oss-120b",
-                        messages=api_messages,
-                        temperature=computed_temp,
-                    ),
-                    timeout=30
-                )
-            assistant_message = completion.choices[0].message.content
-        except asyncio.TimeoutError:
-            logger.error("Тайм-аут запроса к Groq (превышен лимит 30с)")
-            return {"status": "error", "message": "На сервере произошла ошибка. Пожалуйста, попробуйте позже."}
-        except Exception as e:
-            logger.error(f"Критическая ошибка в эндпоинте: {str(e)[:100]}")
-            return {"status": "error", "message": "На сервере произошла ошибка. Пожалуйста, попробуйте позже."}
+    raw_history = []
+    seen_contents = set()
+    
+    for msg in history:
+        if msg["content"] not in seen_contents:
+            raw_history.append({"role": msg["role"], "content": msg["content"]})
+            seen_contents.add(msg["content"])
+    
+    secure_history = await hydrate_lazy_context_by_footprint(raw_history, user_prompt)
+    
+    api_messages = SYSTEM_PROMPT + secure_history
+    
+    if not api_messages or api_messages[-1]["content"] != user_prompt:
+        api_messages.append({"role": "user", "content": user_prompt})
         
-        # Формируем выжимку для записи в историю чата
-        history_user_content = f"[Запрос]: {user_message}\n"
+    computed_temp = get_temperature(user_prompt)
+
+    try:
+        async with rate_limit():
+            completion = await asyncio.wait_for(
+                groq_client.chat.completions.create(
+                    model="openai/gpt-oss-120b",
+                    messages=api_messages,
+                    temperature=computed_temp,
+                ),
+                timeout=30
+            )
+        assistant_message = completion.choices[0].message.content
+    except Exception as e:
+        logger.error(f"Ошибка запроса: {str(e)[:100]}")
+        return {"status": "error", "message": "Ошибка связи с моделью."}
         
-        if aggregated_file_texts:
-            files_summary = []
-            for file_info in aggregated_file_texts:
-                lines = file_info.split("\n")
-                summary = "\n".join([line for line in lines[:3] if line])
-                files_summary.append(summary)
-            history_user_content += "--- МЕДИА-КОНДЕНСАЦИЯ ВЛОЖЕНИЙ ---\n" + "\n".join(files_summary)
-
-        # Записываем в долговременную память сессии чата легкий сжатый стейт
-        user_history.append({"role": "user", "content": history_user_content.strip()})
-        user_history.append({"role": "assistant", "content": assistant_message})
-
-        # === Обрезка истории при превышении лимита и синхронизация с хранилищем === #
+    # === Сохранение в базу данных === #
         
-        if len(user_history) > MAX_HISTORY_MESSAGES:
-            sessions_storage[session_id]["messages"] = user_history[-MAX_HISTORY_MESSAGES:]
-        else:
-            sessions_storage[session_id]["messages"] = user_history
+    add_message(session_id, "user", user_prompt) 
+    add_message(session_id, "assistant", assistant_message)
 
-        sessions_storage[session_id]["last_activity"] = time.time()
-
-        # Сбрасываем легкий стейт на жесткий диск сервера
-        await save_sessions_to_disk()
-
-        return {"status": "success", "message": assistant_message}
+    return {"status": "success", "message": assistant_message}
         
 @app.get("/")
 async def get_site_interface():
@@ -1023,40 +897,33 @@ async def get_site_interface():
 
 @app.on_event("startup")
 async def startup_event():
-    try:
-        await load_sessions_from_disk()
-        logger.info("Сессии загружены с диска")
-    except Exception as e:
-        logger.error(f"Ошибка загрузки сессий при старте: {str(e)[:100]}")
+    # Инициализируем базу данных (создаем таблицы, если их нет)
+    init_db()
+    logger.info("База данных инициализирована.")
 
-    # Запускаем сборщик мусора и сохраняем таску в state для отмены при shutdown
+    # Запускаем сборщик мусора
     garbage_task = asyncio.create_task(memory_garbage_collector())
     app.state.garbage_task = garbage_task
-    logger.info("Сборщик мусора запущен")
+    logger.info("Сборщик мусора запущен.")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    try:
-        # Отменяем таску сборщика мусора
-        task = getattr(app.state, "garbage_task", None)
-        if task:
-            task.cancel()
-            try:
-                await task
-            except Exception:
-                pass
+    # Отменяем сборщик мусора
+    task = getattr(app.state, "garbage_task", None)
+    if task:
+        task.cancel()
+        try:
+            await task
+        except Exception:
+            pass
 
-        await save_sessions_to_disk()
-        logger.info("Сессии сохранены при выключении")
-    except Exception as e:
-        logger.error(f"Ошибка сохранения сессий при выключении: {str(e)[:100]}")
-
+    # Очищаем временные файлы
     try:
         await cleanup_temp_files()
-        logger.info("Временные файлы очищены")
+        logger.info("Временные файлы очищены.")
     except Exception as e:
-        logger.error(f"Ошибка очистки временных файлов: {str(e)[:100]}")
+        logger.error(f"Ошибка очистки файлов: {str(e)[:50]}")
 
 
 # ============= ЗАПУСК ============= #
