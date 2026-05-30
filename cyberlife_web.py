@@ -441,7 +441,16 @@ async def describe_image_with_vision(
         if not validate_base64_size(base64_image):
             return "[Изображение слишком большое для анализа]"
 
-        VISION_PROMPT = "Опиши это изображение с абсолютной точностью в 2-3 коротких, емких предложениях. Четко определи и перечисли только те реальные физические объекты, текстуры, формы, цвета и элементы окружения, которые физически присутствуют на картинке. Если на кадре есть текст или строки кода — перепиши их один в один со 100% точностью. Категорически запрещено придумывать несуществующие объекты, упоминать предметы или фразы, если их нет на самом фото. Выдавай только чистый, сухой текст без списков, маркеров и вводных фраз."
+        VISION_PROMPT = (
+            "Анализируй изображение с предельной точностью. Твоя задача — извлечь данные для обработки.\n\n"
+            "1. ПРИОРИТЕТ: Весь текст, вопросы, варианты ответов или фрагменты кода переписывай "
+            "один в один со 100% точностью.\n\n"
+            "2. ОБЪЕКТЫ: Опиши ключевые физические объекты, если они важны для понимания сути. "
+            "Игнорируй интерфейс: кнопки, фоны, рамки, заголовки окон, иконки.\n\n"
+            "3. ОГРАНИЧЕНИЯ: Категорически запрещено придумывать объекты, которых нет. "
+            "Не используй списки, маркеры, таблицы или вводные фразы. "
+            "Пиши только чистый, сухой текст в 2-3 коротких предложениях."
+        )
         
         async with rate_limit():
             coro = groq_client.chat.completions.create(
@@ -560,8 +569,9 @@ async def process_media_content(file: UploadFile, session_id: str) -> str:
             file_text = await describe_image_with_vision(file_bytes) or "Не удалось распознать"
 
         # Сохранение в БД
+        summary = await compress_report_to_summary(file.filename, file_text)
         save_attachment(session_id, file.filename, file_text)
-        return f"[Файл]: {file.filename}\n[Описание]: {file_text[:500]}..."
+        return f"[Файл]: {file.filename}\n[Описание]: {summary}"
 
     except Exception as e:
         logger.error(f"Ошибка в {file.filename}: {e}")
@@ -571,6 +581,11 @@ async def process_media_content(file: UploadFile, session_id: str) -> str:
         
         
 async def handle_user_input(session_id: str, text: Optional[str], files: List[UploadFile], payload: Dict) -> Tuple[str, List[str]]:
+	#Защита от миссклика
+	last_msg = get_last_message_from_history(session_id) 
+    if last_msg and last_msg['content'] == user_message:
+        if (time.time() - last_msg['timestamp']) < 1.0:
+            return None, []
     # Парсинг
     user_message = (text or payload.get("message") or "").strip()
     action = payload.get("action", "chat")
@@ -707,10 +722,11 @@ async def memory_garbage_collector():
 async def compress_report_to_summary(file_name: str, full_report: str) -> str:
     """Сжимает анализ в 1‑2 предложения (с минимальной загрузкой)"""
     compress_prompt = (
-        f"Вот краткий анализ файла '{file_name}':\n\n"
-        f"{full_report[:2000]}\n\n"
-        "Напиши одно‑два предложения выжимки самых важных выводов "
-        "(основная проблема/фишка/архитектура), чтобы при чтении выжимки понять, о чем был оригинальный файл:"
+        f"Анализ файла '{file_name}':\n{full_report[:2000]}\n\n"
+        "ЗАДАЧА: Сформулируй максимально сжатую выжимку (строго 1-2 предложения). "
+        "ФОКУС: Только факты, данные, текст заданий или суть объекта. "
+        "ЗАПРЕЩЕНО: Упоминать интерфейс, кнопки, цвета, фоны, рамки или технические детали обработки. "
+        "Если информации мало, ответь одной фразой."
     )
 
     try:
@@ -848,13 +864,14 @@ async def connor_web_endpoint(request: Request):
                
     history = get_chat_history(session_id)
 
+    seen_ids = set()
     raw_history = []
-    seen_contents = set()
     
     for msg in history:
-        if msg["content"] not in seen_contents:
+        # Фильтруем по ID, чтобы сохранить уникальность записей из БД
+        if msg["id"] not in seen_ids:
             raw_history.append({"role": msg["role"], "content": msg["content"]})
-            seen_contents.add(msg["content"])
+            seen_ids.add(msg["id"])
     
     secure_history = await hydrate_lazy_context_by_footprint(raw_history, user_prompt)
     
