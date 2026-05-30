@@ -581,14 +581,19 @@ async def process_media_content(file: UploadFile, session_id: str) -> str:
         
         
 async def handle_user_input(session_id: str, text: Optional[str], files: List[UploadFile], payload: Dict) -> Tuple[str, List[str]]:
-	#Защита от миссклика
-	last_msg = get_last_message_from_history(session_id) 
-    if last_msg and last_msg['content'] == user_message:
-        if (time.time() - last_msg['timestamp']) < 1.0:
-            return None, []
-    # Парсинг
+	# Парсинг
     user_message = (text or payload.get("message") or "").strip()
     action = payload.get("action", "chat")
+    
+    #Защита от миссклика
+    history = get_chat_history(session_id)
+    if history:
+        last_msg = history[-1] 
+        if last_msg.get('content') == user_message:
+            msg_time = last_msg.get('timestamp', 0)
+            if (time.time() - timestamp) < 1.0:
+                logger.info(f"Дубль сообщения от {session_id} проигнорирован.")
+                return "", []
     
     # Валидация
     if not user_message and not files and action == "chat":
@@ -893,6 +898,14 @@ async def connor_web_endpoint(request: Request):
                 timeout=30
             )
         assistant_message = completion.choices[0].message.content
+        # Логирование токенов
+        usage = completion.usage
+        logger.info(
+            f"Токены: вход={usage.prompt_tokens}, "
+            f"выход={usage.completion_tokens}, "
+            f"всего={usage.total_tokens} | "
+            f"Сессия: {session_id}"
+        )
     except Exception as e:
         logger.error(f"Ошибка запроса: {str(e)[:100]}")
         return {"status": "error", "message": "Ошибка связи с моделью."}
